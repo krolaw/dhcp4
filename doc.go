@@ -1,5 +1,8 @@
 // DHCP4 Library written in Go.
 //
+// Copyright 2013 Skagerrak Software - http://www.skagerarksoftware.com/
+// Author: http://richard.warburton.it/
+//
 // Example of minimal DHCP server:
 // 	package main
 //
