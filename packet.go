@@ -6,17 +6,17 @@ import (
 )
 
 type Option struct {
-	Code  optionCode
+	Code  OptionCode
 	Value []byte
 }
-type optionCode byte
-type opCode byte
+type OptionCode byte
+type OpCode byte
 type MessageType byte // Option 53
 
 // A DHCP packet
 type Packet []byte
 
-func (p Packet) OpCode() opCode           { return opCode(p[0]) }
+func (p Packet) OpCode() OpCode           { return OpCode(p[0]) }
 func (p Packet) HType() byte              { return p[1] }
 func (p Packet) HLen() byte               { return p[2] }
 func (p Packet) Hops() byte               { return p[3] } // Never Used?
@@ -45,7 +45,7 @@ func (p Packet) SetBroadcast(broadcast bool) {
 	}
 }
 
-func (p Packet) SetOpCode(c opCode) { p[0] = byte(c) }
+func (p Packet) SetOpCode(c OpCode) { p[0] = byte(c) }
 func (p Packet) SetCHAddr(a net.HardwareAddr) {
 	copy(p[28:44], a)
 	p[2] = byte(len(a))
@@ -61,29 +61,29 @@ func (p Packet) SetSIAddr(ip net.IP)     { copy(p.SIAddr(), ip) }
 func (p Packet) SetGIAddr(ip net.IP)     { copy(p.GIAddr(), ip) }
 
 // Map of DHCP options
-type Options map[optionCode][]byte
+type Options map[OptionCode][]byte
 
 // Parses the packet's options into an Options map
 func (p Packet) ParseOptions() Options {
 	opts := p.Options()
 	options := make(Options, 10)
-	for len(opts) >= 2 && optionCode(opts[0]) != End {
-		if optionCode(opts[0]) == Pad {
+	for len(opts) >= 2 && OptionCode(opts[0]) != End {
+		if OptionCode(opts[0]) == Pad {
 			opts = opts[1:]
 			continue
 		}
 		size := int(opts[1])
 		if len(opts) >= 2+size {
-			options[optionCode(opts[0])] = opts[2 : 2+size]
+			options[OptionCode(opts[0])] = opts[2 : 2+size]
 		}
 		opts = opts[2+size:]
 	}
 	return options
 }
 
-func NewPacket(opCode opCode) Packet {
+func NewPacket(OpCode OpCode) Packet {
 	p := make(Packet, 241)
-	p.SetOpCode(opCode)
+	p.SetOpCode(OpCode)
 	p.SetHType(1) // Ethernet
 	p.SetCookie([]byte{99, 130, 83, 99})
 	p[240] = byte(End)
@@ -91,9 +91,10 @@ func NewPacket(opCode opCode) Packet {
 }
 
 // Appends a DHCP option to the end of a packet
-func (p *Packet) AddOption(o optionCode, value []byte) {
-	*p = append((*p)[:len(*p)-1], []byte{byte(o), byte(len(value))}...)
-	*p = append(*p, append(value, byte(End))...)
+func (p *Packet) AddOption(o OptionCode, value []byte) {
+	*p = append((*p)[:len(*p)-1], []byte{byte(o), byte(len(value))}...) // Strip off End, Add OptionCode and Length
+	*p = append(*p, value...)                                           // Add Option Value
+	*p = append(*p, byte(End))                                          // Add on new End
 }
 
 // Removes all options from packet.
@@ -151,8 +152,8 @@ func (p *Packet) PadToMinSize() {
 
 // OpCodes
 const (
-	BootRequest opCode = 1 // From Client
-	BootReply   opCode = 2 // From Server
+	BootRequest OpCode = 1 // From Client
+	BootReply   OpCode = 2 // From Server
 )
 
 // DHCP Message Type 53
@@ -169,101 +170,101 @@ const (
 
 // DHCP Options
 const (
-	End                          optionCode = 255
-	Pad                          optionCode = 0
-	OptionSubnetMask             optionCode = 1
-	OptionTimeOffset             optionCode = 2
-	OptionRouter                 optionCode = 3
-	OptionTimeServer             optionCode = 4
-	OptionNameServer             optionCode = 5
-	OptionDomainNameServer       optionCode = 6
-	OptionLogServer              optionCode = 7
-	OptionCookieServer           optionCode = 8
-	OptionLPRServer              optionCode = 9
-	OptionImpressServer          optionCode = 10
-	OptionResourceLocationServer optionCode = 11
-	OptionHostName               optionCode = 12
-	OptionBootFileSize           optionCode = 13
-	OptionMeritDumpFile          optionCode = 14
-	OptionDomainName             optionCode = 15
-	OptionSwapServer             optionCode = 16
-	OptionRootPath               optionCode = 17
-	OptionExtensionsPath         optionCode = 18
+	End                          OptionCode = 255
+	Pad                          OptionCode = 0
+	OptionSubnetMask             OptionCode = 1
+	OptionTimeOffset             OptionCode = 2
+	OptionRouter                 OptionCode = 3
+	OptionTimeServer             OptionCode = 4
+	OptionNameServer             OptionCode = 5
+	OptionDomainNameServer       OptionCode = 6
+	OptionLogServer              OptionCode = 7
+	OptionCookieServer           OptionCode = 8
+	OptionLPRServer              OptionCode = 9
+	OptionImpressServer          OptionCode = 10
+	OptionResourceLocationServer OptionCode = 11
+	OptionHostName               OptionCode = 12
+	OptionBootFileSize           OptionCode = 13
+	OptionMeritDumpFile          OptionCode = 14
+	OptionDomainName             OptionCode = 15
+	OptionSwapServer             OptionCode = 16
+	OptionRootPath               OptionCode = 17
+	OptionExtensionsPath         OptionCode = 18
 
 	// IP Layer Parameters per Host
-	OptionIPForwardingEnableDisable          optionCode = 19
-	OptionNonLocalSourceRoutingEnableDisable optionCode = 20
-	OptionPolicyFilter                       optionCode = 21
-	OptionMaximumDatagramReassemblySize      optionCode = 22
-	OptionDefaultIPTimeToLive                optionCode = 23
-	OptionPathMTUAgingTimeout                optionCode = 24
-	OptionPathMTUPlateauTable                optionCode = 25
+	OptionIPForwardingEnableDisable          OptionCode = 19
+	OptionNonLocalSourceRoutingEnableDisable OptionCode = 20
+	OptionPolicyFilter                       OptionCode = 21
+	OptionMaximumDatagramReassemblySize      OptionCode = 22
+	OptionDefaultIPTimeToLive                OptionCode = 23
+	OptionPathMTUAgingTimeout                OptionCode = 24
+	OptionPathMTUPlateauTable                OptionCode = 25
 
 	// IP Layer Parameters per Interface
-	OptionInterfaceMTU              optionCode = 26
-	OptionAllSubnetsAreLocal        optionCode = 27
-	OptionBroadcastAddress          optionCode = 28
-	OptionPerformMaskDiscovery      optionCode = 29
-	OptionMaskSupplier              optionCode = 30
-	OptionPerformRouterDiscovery    optionCode = 31
-	OptionRouterSolicitationAddress optionCode = 32
-	OptionStaticRoute               optionCode = 33
+	OptionInterfaceMTU              OptionCode = 26
+	OptionAllSubnetsAreLocal        OptionCode = 27
+	OptionBroadcastAddress          OptionCode = 28
+	OptionPerformMaskDiscovery      OptionCode = 29
+	OptionMaskSupplier              OptionCode = 30
+	OptionPerformRouterDiscovery    OptionCode = 31
+	OptionRouterSolicitationAddress OptionCode = 32
+	OptionStaticRoute               OptionCode = 33
 
 	// Link Layer Parameters per Interface
-	OptionLinkLayerParametersPerInterface optionCode = 34
-	OptionTrailerEncapsulation            optionCode = 34
-	OptionARPCacheTimeout                 optionCode = 35
-	OptionEthernetEncapsulation           optionCode = 36
+	OptionLinkLayerParametersPerInterface OptionCode = 34
+	OptionTrailerEncapsulation            OptionCode = 34
+	OptionARPCacheTimeout                 OptionCode = 35
+	OptionEthernetEncapsulation           OptionCode = 36
 
 	// TCP Parameters
-	OptionTCPDefaultTTL        optionCode = 37
-	OptionTCPKeepaliveInterval optionCode = 38
-	OptionTCPKeepaliveGarbage  optionCode = 39
+	OptionTCPDefaultTTL        OptionCode = 37
+	OptionTCPKeepaliveInterval OptionCode = 38
+	OptionTCPKeepaliveGarbage  OptionCode = 39
 
 	// Application and Service Parameters
-	OptionNetworkInformationServiceDomain            optionCode = 40
-	OptionNetworkInformationServers                  optionCode = 41
-	OptionNetworkTimeProtocolServers                 optionCode = 42
-	OptionVendorSpecificInformation                  optionCode = 43
-	OptionNetBIOSOverTCPIPNameServer                 optionCode = 44
-	OptionNetBIOSOverTCPIPDatagramDistributionServer optionCode = 45
-	OptionNetBIOSOverTCPIPNodeType                   optionCode = 46
-	OptionNetBIOSOverTCPIPScope                      optionCode = 47
-	OptionXWindowSystemFontServer                    optionCode = 48
-	OptionXWindowSystemDisplayManager                optionCode = 49
-	OptionNetworkInformationServicePlusDomain        optionCode = 64
-	OptionNetworkInformationServicePlusServers       optionCode = 65
-	OptionMobileIPHomeAgent                          optionCode = 68
-	OptionSimpleMailTransportProtocol                optionCode = 69
-	OptionPostOfficeProtocolServer                   optionCode = 70
-	OptionNetworkNewsTransportProtocol               optionCode = 71
-	OptionDefaultWorldWideWebServer                  optionCode = 72
-	OptionDefaultFingerServer                        optionCode = 73
-	OptionDefaultInternetRelayChatServer             optionCode = 74
-	OptionStreetTalkServer                           optionCode = 75
-	OptionStreetTalkDirectoryAssistance              optionCode = 76
+	OptionNetworkInformationServiceDomain            OptionCode = 40
+	OptionNetworkInformationServers                  OptionCode = 41
+	OptionNetworkTimeProtocolServers                 OptionCode = 42
+	OptionVendorSpecificInformation                  OptionCode = 43
+	OptionNetBIOSOverTCPIPNameServer                 OptionCode = 44
+	OptionNetBIOSOverTCPIPDatagramDistributionServer OptionCode = 45
+	OptionNetBIOSOverTCPIPNodeType                   OptionCode = 46
+	OptionNetBIOSOverTCPIPScope                      OptionCode = 47
+	OptionXWindowSystemFontServer                    OptionCode = 48
+	OptionXWindowSystemDisplayManager                OptionCode = 49
+	OptionNetworkInformationServicePlusDomain        OptionCode = 64
+	OptionNetworkInformationServicePlusServers       OptionCode = 65
+	OptionMobileIPHomeAgent                          OptionCode = 68
+	OptionSimpleMailTransportProtocol                OptionCode = 69
+	OptionPostOfficeProtocolServer                   OptionCode = 70
+	OptionNetworkNewsTransportProtocol               OptionCode = 71
+	OptionDefaultWorldWideWebServer                  OptionCode = 72
+	OptionDefaultFingerServer                        OptionCode = 73
+	OptionDefaultInternetRelayChatServer             OptionCode = 74
+	OptionStreetTalkServer                           OptionCode = 75
+	OptionStreetTalkDirectoryAssistance              OptionCode = 76
 
 	// DHCP Extensions
-	OptionRequestedIPAddress     optionCode = 50
-	OptionIPAddressLeaseTime     optionCode = 51
-	OptionOverload               optionCode = 52
-	OptionDHCPMessageType        optionCode = 53
-	OptionServerIdentifier       optionCode = 54
-	OptionParameterRequestList   optionCode = 55
-	OptionMessage                optionCode = 56
-	OptionMaximumDHCPMessageSize optionCode = 57
-	OptionRenewalTimeValue       optionCode = 58
-	OptionRebindingTimeValue     optionCode = 59
-	OptionVendorClassIdentifier  optionCode = 60
-	OptionClientIdentifier       optionCode = 61
+	OptionRequestedIPAddress     OptionCode = 50
+	OptionIPAddressLeaseTime     OptionCode = 51
+	OptionOverload               OptionCode = 52
+	OptionDHCPMessageType        OptionCode = 53
+	OptionServerIdentifier       OptionCode = 54
+	OptionParameterRequestList   OptionCode = 55
+	OptionMessage                OptionCode = 56
+	OptionMaximumDHCPMessageSize OptionCode = 57
+	OptionRenewalTimeValue       OptionCode = 58
+	OptionRebindingTimeValue     OptionCode = 59
+	OptionVendorClassIdentifier  OptionCode = 60
+	OptionClientIdentifier       OptionCode = 61
 
-	OptionTFTPServerName optionCode = 66
-	OptionBootFileName   optionCode = 67
+	OptionTFTPServerName OptionCode = 66
+	OptionBootFileName   OptionCode = 67
 
-	OptionTZPOSIXString    optionCode = 100
-	OptionTZDatabaseString optionCode = 101
+	OptionTZPOSIXString    OptionCode = 100
+	OptionTZDatabaseString OptionCode = 101
 
-	OptionClasslessRouteFormat optionCode = 121
+	OptionClasslessRouteFormat OptionCode = 121
 )
 
 /* Notes

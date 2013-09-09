@@ -25,8 +25,8 @@ func (o Options) SelectOrderOrAll(order []byte) []Option {
 func (o Options) SelectOrder(order []byte) []Option {
 	opts := make([]Option, 0, len(order))
 	for _, v := range order {
-		if data, ok := o[optionCode(v)]; ok {
-			opts = append(opts, Option{Code: optionCode(v), Value: data})
+		if data, ok := o[OptionCode(v)]; ok {
+			opts = append(opts, Option{Code: OptionCode(v), Value: data})
 		}
 	}
 	return opts
