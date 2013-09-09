@@ -98,8 +98,7 @@ func (p *Packet) AddOption(o optionCode, value []byte) {
 
 // Removes all options from packet.
 func (p *Packet) StripOptions() {
-	(*p)[240] = byte(End)
-	*p = (*p)[:241]
+	*p = append((*p)[:240], byte(End))
 }
 
 // Creates a request packet that a Client would send to a server.
@@ -142,9 +141,11 @@ func ReplyPacket(req Packet, mt MessageType, serverId, yIAddr net.IP, leaseDurat
 
 // PadToMinSize pads a packet so that when sent over UDP, the entire packet,
 // is 300 bytes (BOOTP min), to be compatible with really old devices.
+var padder [272]byte
+
 func (p *Packet) PadToMinSize() {
 	if n := len(*p); n < 272 {
-		*p = append(*p, make([]byte, 272-n)...)
+		*p = append(*p, padder[:272-n]...)
 	}
 }
 
@@ -266,8 +267,6 @@ const (
 )
 
 /* Notes
-A DHCP server always returns its own address in the 'server
-   identifier' option.
-DHCP defines a new 'client identifier' option that is used to pass an
-   explicit client identifier to a DHCP server.
+A DHCP server always returns its own address in the 'server identifier' option.
+DHCP defines a new 'client identifier' option that is used to pass an explicit client identifier to a DHCP server.
 */
