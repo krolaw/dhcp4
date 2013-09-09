@@ -65,11 +65,13 @@ func (s *DHCPServer) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options 
 		if server, ok := options[dhcp.OptionServerIdentifier]; ok && !net.IP(server).Equal(s.ip) {
 			return nil // Message not for this dhcp server
 		}
-		if leaseNum := dhcp.IPRange(s.start, net.IP(options[dhcp.OptionRequestedIPAddress])); leaseNum >= 0 && leaseNum < s.leaseRange {
-			if l, exists := s.leases[leaseNum]; !exists || l.nic == p.CHAddr().String() {
-				s.leases[leaseNum] = lease{nic: p.CHAddr().String(), expiry: time.Now().Add(s.leaseDuration)}
-				return dhcp.ReplyPacket(p, dhcp.ACK, s.ip, net.IP(options[dhcp.OptionRequestedIPAddress]), s.leaseDuration,
-					s.options.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
+		if reqIP := net.IP(options[dhcp.OptionRequestedIPAddress]); len(reqIP) == 4 {
+			if leaseNum := dhcp.IPRange(s.start, reqIP); leaseNum >= 0 && leaseNum < s.leaseRange {
+				if l, exists := s.leases[leaseNum]; !exists || l.nic == p.CHAddr().String() {
+					s.leases[leaseNum] = lease{nic: p.CHAddr().String(), expiry: time.Now().Add(s.leaseDuration)}
+					return dhcp.ReplyPacket(p, dhcp.ACK, s.ip, net.IP(options[dhcp.OptionRequestedIPAddress]), s.leaseDuration,
+						s.options.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
+				}
 			}
 		}
 		return dhcp.ReplyPacket(p, dhcp.NAK, s.ip, nil, 0, nil)
