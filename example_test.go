@@ -66,7 +66,7 @@ func (s *DHCPServer) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options 
 			return nil // Message not for this dhcp server
 		}
 		if reqIP := net.IP(options[dhcp.OptionRequestedIPAddress]); len(reqIP) == 4 {
-			if leaseNum := dhcp.IPRange(s.start, reqIP); leaseNum >= 0 && leaseNum < s.leaseRange {
+			if leaseNum := dhcp.IPRange(s.start, reqIP) - 1; leaseNum >= 0 && leaseNum < s.leaseRange {
 				if l, exists := s.leases[leaseNum]; !exists || l.nic == p.CHAddr().String() {
 					s.leases[leaseNum] = lease{nic: p.CHAddr().String(), expiry: time.Now().Add(s.leaseDuration)}
 					return dhcp.ReplyPacket(p, dhcp.ACK, s.ip, net.IP(options[dhcp.OptionRequestedIPAddress]), s.leaseDuration,
@@ -90,7 +90,7 @@ func (s *DHCPServer) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options 
 func (s *DHCPServer) freeLease() int {
 	now := time.Now()
 	b := rand.Intn(s.leaseRange) // Try random first
-	for _, v := range [][]int{[]int{b, s.leaseRange}, []int{s.leaseRange, b}} {
+	for _, v := range [][]int{[]int{b, s.leaseRange}, []int{0, b}} {
 		for i := v[0]; i < v[1]; i++ {
 			if l, ok := s.leases[i]; !ok || l.expiry.Before(now) {
 				return i

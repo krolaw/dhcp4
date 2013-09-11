@@ -81,9 +81,9 @@ func (p Packet) ParseOptions() Options {
 	return options
 }
 
-func NewPacket(OpCode OpCode) Packet {
+func NewPacket(opCode OpCode) Packet {
 	p := make(Packet, 241)
-	p.SetOpCode(OpCode)
+	p.SetOpCode(opCode)
 	p.SetHType(1) // Ethernet
 	p.SetCookie([]byte{99, 130, 83, 99})
 	p[240] = byte(End)
