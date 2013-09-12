@@ -73,9 +73,10 @@ func (p Packet) ParseOptions() Options {
 			continue
 		}
 		size := int(opts[1])
-		if len(opts) >= 2+size {
-			options[OptionCode(opts[0])] = opts[2 : 2+size]
+		if len(opts) < 2+size {
+			break
 		}
+		options[OptionCode(opts[0])] = opts[2 : 2+size]
 		opts = opts[2+size:]
 	}
 	return options
