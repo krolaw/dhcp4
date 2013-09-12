@@ -1,7 +1,6 @@
 package dhcp4
 
 import (
-	//"fmt"
 	"net"
 )
 
@@ -50,7 +49,6 @@ func (s *Server) Serve(l net.PacketConn, replyPort int) error {
 
 		// TODO consider more packet validity checks
 		if res := s.Handler.ServeDHCP(p, MessageType(msgType[0]), options); res != nil {
-			//fmt.Println("Addr:", addr.Network(), addr, srcAddr, )
 			dstIP := net.IPv4(255, 255, 255, 255)
 			/*if !p.Broadcast() {
 				dstIP = net.IP(p.CIAddr())
