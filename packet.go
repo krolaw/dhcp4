@@ -55,10 +55,10 @@ func (p Packet) SetCookie(cookie []byte) { copy(p.Cookie(), cookie) }
 func (p Packet) SetXId(xId []byte)       { copy(p.XId(), xId) }
 func (p Packet) SetSecs(secs []byte)     { copy(p.Secs(), secs) }
 func (p Packet) SetFlags(flags []byte)   { copy(p.Flags(), flags) }
-func (p Packet) SetCIAddr(ip net.IP)     { copy(p.CIAddr(), ip) }
-func (p Packet) SetYIAddr(ip net.IP)     { copy(p.YIAddr(), ip) }
-func (p Packet) SetSIAddr(ip net.IP)     { copy(p.SIAddr(), ip) }
-func (p Packet) SetGIAddr(ip net.IP)     { copy(p.GIAddr(), ip) }
+func (p Packet) SetCIAddr(ip net.IP)     { copy(p.CIAddr(), ip.To4()) }
+func (p Packet) SetYIAddr(ip net.IP)     { copy(p.YIAddr(), ip.To4()) }
+func (p Packet) SetSIAddr(ip net.IP)     { copy(p.SIAddr(), ip.To4()) }
+func (p Packet) SetGIAddr(ip net.IP)     { copy(p.GIAddr(), ip.To4()) }
 
 // Map of DHCP options
 type Options map[OptionCode][]byte
