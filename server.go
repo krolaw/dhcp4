@@ -1,6 +1,7 @@
 package dhcp4
 
 import (
+	"fmt"
 	"net"
 )
 
@@ -32,6 +33,11 @@ func (s *Server) Serve(l net.PacketConn, replyPort int) error {
 		srcAddr = &net.UDPAddr{IP: s.ServerIP}
 	}
 	buffer := make([]byte, 1500)
+	r, err := net.DialUDP("udp", srcAddr, &net.UDPAddr{IP: net.IPv4(255, 255, 255, 255), Port: replyPort})
+	if err != nil {
+		return err
+	}
+	defer r.Close()
 	for {
 		n, _, err := l.ReadFrom(buffer)
 		if err != nil {
@@ -46,19 +52,11 @@ func (s *Server) Serve(l net.PacketConn, replyPort int) error {
 		if len(msgType) != 1 {
 			return nil
 		}
-
 		// TODO consider more packet validity checks
 		if res := s.Handler.ServeDHCP(p, MessageType(msgType[0]), options); res != nil {
-			dstIP := net.IPv4(255, 255, 255, 255)
-			/*if !p.Broadcast() {
-				dstIP = net.IP(p.CIAddr())
-			}*/
-			r, err := net.DialUDP("udp", srcAddr, &net.UDPAddr{IP: dstIP, Port: replyPort})
-			if err == nil {
-				defer r.Close()
-				r.Write(res)
+			if _, e := r.Write(res); e != nil {
+				fmt.Println("Write Error:", e.Error())
 			}
-
 		}
 	}
 	return nil
