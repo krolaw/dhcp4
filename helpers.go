@@ -82,22 +82,3 @@ func JoinIPs(ips []net.IP) (b []byte) {
 	}
 	return
 }
-
-/*
-// PutUint writes value to a byte slice.
-func PutUint(data []byte, value uint64) {
-	for i := len(data) - 1; i >= 0; i-- {
-		data[i] = byte(value % 256)
-		value /= 256
-	}
-}
-
-// Uint returns a value from a byte slice.
-// Values requiring more than 64bits, won't work correctly
-func Uint(data []byte) (ans uint64) {
-	for _, b := range data {
-		ans <<= 8
-		ans += uint64(b)
-	}
-	return
-}*/
