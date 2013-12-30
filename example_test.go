@@ -47,7 +47,7 @@ func SetupHandler() *DHCPHandler {
 
 // Example using DHCP with a single network interface
 func ExampleListenAndServe() {
-	log.Fatal(dhcp.ListenAndServe(handler))
+	log.Fatal(dhcp.ListenAndServe(SetupHandler()))
 }
 
 // Example using DHCP on one interface, with a device with multiple interfaces.
@@ -55,9 +55,9 @@ func ExampleServe() {
 	// The only way to listen to broadcast packets is to listen on all interfaces at the same time.
 	// If you attempt to bind to one interface by specifying an IP, broadcast packets will ignored.
 	// The recommended workaround is to firewall incoming destination port 67 on the undesired interfaces.
-	in, err := net.ListenPacket("udp4", ":67")
+	in, err := net.ListenUDP("udp4", &net.UDPAddr{Port: 67})
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 	defer in.Close()
 
@@ -67,14 +67,13 @@ func ExampleServe() {
 	// to the desired interface.  Unfortunately, the source port cannot be set to 67 (required by some
 	// clients) as this is being used by the listener.  The recommended workaround is to use the firewall
 	// to SNAT destination port 68 outgoing packets --to-source :67.
-	out, err := net.DialUDP("udp", &net.UDPAddr{IP: net.IPv4(192, 168, 1, 20)},
-		&net.UDPAddr{IP: net.IPv4(255, 255, 255, 255), Port: 68})
+	out, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.IPv4(192, 168, 1, 104)})
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 	defer out.Close()
 
-	log.Fatal(dhcp.Serve(in, out, handler))
+	log.Fatal(dhcp.Serve(in, out, SetupHandler()))
 }
 
 func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options dhcp.Options) (d dhcp.Packet) {
@@ -98,7 +97,7 @@ func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options
 			return nil // Message not for this dhcp server
 		}
 		if reqIP := net.IP(options[dhcp.OptionRequestedIPAddress]); len(reqIP) == 4 {
-			if leaseNum := dhcp.IPRange(h.start, reqIP) - 1; leaseNum >= 0 && leaseNum < s.leaseRange {
+			if leaseNum := dhcp.IPRange(h.start, reqIP) - 1; leaseNum >= 0 && leaseNum < h.leaseRange {
 				if l, exists := h.leases[leaseNum]; !exists || l.nic == p.CHAddr().String() {
 					h.leases[leaseNum] = lease{nic: p.CHAddr().String(), expiry: time.Now().Add(h.leaseDuration)}
 					return dhcp.ReplyPacket(p, dhcp.ACK, h.ip, net.IP(options[dhcp.OptionRequestedIPAddress]), h.leaseDuration,

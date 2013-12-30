@@ -1,7 +1,6 @@
 package dhcp4
 
 import (
-	"io"
 	"log"
 	"net"
 )
@@ -10,8 +9,12 @@ type Handler interface {
 	ServeDHCP(req Packet, msgType MessageType, options Options) Packet
 }
 
-type NetReaderFrom interface {
-	ReadFrom([]byte) (n int, addr net.Addr, err error)
+type ReaderFromUDP interface {
+	ReadFromUDP(b []byte) (n int, addr *net.UDPAddr, err error)
+}
+
+type WriterToUDP interface {
+	WriteToUDP(b []byte, addr *net.UDPAddr) (n int, err error)
 }
 
 // Serve listens on the listen net.PacketConn, passes DHCP packets to handler and sends
@@ -21,10 +24,10 @@ type NetReaderFrom interface {
 // with multiple interfaces, since Go's net library doesn't currently support binding broadcast
 // listeners to a particular interface.  See Examples or https://code.google.com/p/go/issues/detail?id=6935 for more info.
 //
-func Serve(listen NetReaderFrom, respond io.Writer, handler Handler) error {
+func Serve(listen ReaderFromUDP, respond WriterToUDP, handler Handler) error {
 	buffer := make([]byte, 1500)
 	for {
-		n, _, err := listen.ReadFrom(buffer)
+		n, addr, err := listen.ReadFromUDP(buffer)
 		if err != nil {
 			return err
 		}
@@ -39,7 +42,10 @@ func Serve(listen NetReaderFrom, respond io.Writer, handler Handler) error {
 		}
 		// TODO consider more packet validity checks
 		if res := handler.ServeDHCP(p, MessageType(msgType[0]), options); res != nil {
-			if _, e := r.Write(res); e != nil {
+			if addr.IP.Equal(net.IPv4zero) { // If IP not available, broadcast
+				addr.IP = net.IP{255, 255, 255, 255}
+			}
+			if _, e := respond.WriteToUDP(res, addr); e != nil {
 				log.Fatal("Write Error:", e.Error())
 			}
 		}
@@ -50,7 +56,7 @@ func Serve(listen NetReaderFrom, respond io.Writer, handler Handler) error {
 // and then calls Serve with handler to handle requests
 // on incoming packets.
 func ListenAndServe(handler Handler) error {
-	l, err := net.ListenPacket("udp4", ":67")
+	l, err := net.ListenUDP("udp4", &net.UDPAddr{Port: 67})
 	if err != nil {
 		return err
 	}
