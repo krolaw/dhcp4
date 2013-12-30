@@ -43,7 +43,7 @@ func Serve(listen ReaderFromUDP, respond WriterToUDP, handler Handler) error {
 		// TODO consider more packet validity checks
 		if res := handler.ServeDHCP(p, MessageType(msgType[0]), options); res != nil {
 			if addr.IP.Equal(net.IPv4zero) { // If IP not available, broadcast
-				addr.IP = net.IP{255, 255, 255, 255}
+				addr.IP = net.IPv4bcast
 			}
 			if _, e := respond.WriteToUDP(res, addr); e != nil {
 				log.Fatal("Write Error:", e.Error())

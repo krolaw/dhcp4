@@ -1,5 +1,8 @@
 # DHCP4 - A DHCP library written in Go.
 
+## Author
+http://richard.warburton.it/
+
 ## Warning
 This library is still being developed.  Function calls may change.
 
