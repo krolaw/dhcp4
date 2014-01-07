@@ -46,7 +46,7 @@ func Serve(listen ReaderFromUDP, respond WriterToUDP, handler Handler) error {
 				addr.IP = net.IPv4bcast
 			}
 			if _, e := respond.WriteToUDP(res, addr); e != nil {
-				log.Fatal("Write Error:", e.Error())
+				log.Println("Write Error:", e.Error())
 			}
 		}
 	}
