@@ -2,7 +2,7 @@
 //
 // Author: http://richard.warburton.it/
 //
-// Copyright: 2013 Skagerrak Software - http://www.skagerraksoftware.com/
+// Copyright: 2014 Skagerrak Software - http://www.skagerraksoftware.com/
 package dhcp4
 
 import (
