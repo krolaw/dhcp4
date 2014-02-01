@@ -1,14 +1,9 @@
-// DHCP4 Library written in Go.
-//
-// Copyright 2013 Skagerrak Software - http://www.skagerraksoftware.com/
-//
-// Author: http://richard.warburton.it/
-//
 // Example of minimal DHCP server:
 package dhcp4_test
 
 import (
 	dhcp "github.com/krolaw/dhcp4"
+
 	"log"
 	"math/rand"
 	"net"
@@ -45,35 +40,10 @@ func SetupHandler() *DHCPHandler {
 	return handler
 }
 
-// Example using DHCP with a single network interface
+// Example using DHCP with a single network interface device
 func ExampleListenAndServe() {
 	log.Fatal(dhcp.ListenAndServe(SetupHandler()))
-}
-
-// Example using DHCP on one interface, with a device with multiple interfaces.
-func ExampleServe() {
-	// The only way to listen to broadcast packets is to listen on all interfaces at the same time.
-	// If you attempt to bind to one interface by specifying an IP, broadcast packets will ignored.
-	// The recommended workaround is to firewall incoming destination port 67 on the undesired interfaces.
-	in, err := net.ListenUDP("udp4", &net.UDPAddr{Port: 67})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer in.Close()
-
-	// Packets written to the broadcast listener are sent through the main interface.
-	// On a router this isn't desirable, as the main interface usually connects to the gateway.  Users
-	// of the router are usually on another interface.  To compensate, we create a new connection bound
-	// to the desired interface.  Unfortunately, the source port cannot be set to 67 (required by some
-	// clients) as this is being used by the listener.  The recommended workaround is to use the firewall
-	// to SNAT destination port 68 outgoing packets --to-source :67.
-	out, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.IPv4(192, 168, 1, 104)})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer out.Close()
-
-	log.Fatal(dhcp.Serve(in, out, SetupHandler()))
+	// log.Fatal(dhcp.ListenAndServeIf("eth0",SetupHandler())) // Select interface on multi interface device
 }
 
 func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options dhcp.Options) (d dhcp.Packet) {
