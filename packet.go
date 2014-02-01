@@ -21,18 +21,25 @@ type MessageType byte // Option 53
 // A DHCP packet
 type Packet []byte
 
-func (p Packet) OpCode() OpCode           { return OpCode(p[0]) }
-func (p Packet) HType() byte              { return p[1] }
-func (p Packet) HLen() byte               { return p[2] }
-func (p Packet) Hops() byte               { return p[3] } // Never Used?
-func (p Packet) XId() []byte              { return p[4:8] }
-func (p Packet) Secs() []byte             { return p[8:10] } // Never Used?
-func (p Packet) Flags() []byte            { return p[10:12] }
-func (p Packet) CIAddr() net.IP           { return net.IP(p[12:16]) }
-func (p Packet) YIAddr() net.IP           { return net.IP(p[16:20]) }
-func (p Packet) SIAddr() net.IP           { return net.IP(p[20:24]) }
-func (p Packet) GIAddr() net.IP           { return net.IP(p[24:28]) }
-func (p Packet) CHAddr() net.HardwareAddr { return net.HardwareAddr(p[28 : 28+p.HLen()]) } // max endPos 44
+func (p Packet) OpCode() OpCode { return OpCode(p[0]) }
+func (p Packet) HType() byte    { return p[1] }
+func (p Packet) HLen() byte     { return p[2] }
+func (p Packet) Hops() byte     { return p[3] } // Never Used?
+func (p Packet) XId() []byte    { return p[4:8] }
+func (p Packet) Secs() []byte   { return p[8:10] } // Never Used?
+func (p Packet) Flags() []byte  { return p[10:12] }
+func (p Packet) CIAddr() net.IP { return net.IP(p[12:16]) }
+func (p Packet) YIAddr() net.IP { return net.IP(p[16:20]) }
+func (p Packet) SIAddr() net.IP { return net.IP(p[20:24]) }
+func (p Packet) GIAddr() net.IP { return net.IP(p[24:28]) }
+func (p Packet) CHAddr() net.HardwareAddr {
+	hLen := p.HLen()
+	if hLen > 16 { // Prevent chaddr exceeding p boundary
+		hLen = 16
+	}
+	return net.HardwareAddr(p[28 : 28+p.HLen()]) // max endPos 44
+}
+
 // 192 bytes of zeros BOOTP legacy
 func (p Packet) Cookie() []byte { return p[236:240] }
 func (p Packet) Options() []byte {
