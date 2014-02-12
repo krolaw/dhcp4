@@ -41,6 +41,22 @@ func (p Packet) CHAddr() net.HardwareAddr {
 }
 
 // 192 bytes of zeros BOOTP legacy
+
+// BOOTP legacy
+func (p Packet) SName() []byte { return trimNull(p[44:108]) }
+
+// BOOTP legacy
+func (p Packet) File() []byte { return trimNull(p[108:236]) }
+
+func trimNull(d []byte) []byte {
+	for i, v := range d {
+		if v == 0 {
+			return d[:i]
+		}
+	}
+	return d
+}
+
 func (p Packet) Cookie() []byte { return p[236:240] }
 func (p Packet) Options() []byte {
 	if len(p) > 240 {
@@ -71,6 +87,22 @@ func (p Packet) SetCIAddr(ip net.IP)     { copy(p.CIAddr(), ip.To4()) }
 func (p Packet) SetYIAddr(ip net.IP)     { copy(p.YIAddr(), ip.To4()) }
 func (p Packet) SetSIAddr(ip net.IP)     { copy(p.SIAddr(), ip.To4()) }
 func (p Packet) SetGIAddr(ip net.IP)     { copy(p.GIAddr(), ip.To4()) }
+
+// BOOTP legacy
+func (p Packet) SetSName(sName []byte) {
+	copy(p[44:108], sName)
+	if len(sName) < 64 {
+		p[44+len(sName)] = 0
+	}
+}
+
+// BOOTP legacy
+func (p Packet) SetFile(file []byte) {
+	copy(p[108:236], file)
+	if len(file) < 128 {
+		p[108+len(file)] = 0
+	}
+}
 
 // Map of DHCP options
 type Options map[OptionCode][]byte
