@@ -10,6 +10,30 @@ import (
 	"time"
 )
 
+// Example using DHCP with a single network interface device
+func ExampleHandler() {
+	serverIP := net.IP{172, 30, 0, 1}
+	handler := &DHCPHandler{
+		ip:            serverIP,
+		leaseDuration: 2 * time.Hour,
+		start:         net.IP{172, 30, 0, 2},
+		leaseRange:    50,
+		leases:        make(map[int]lease, 10),
+		options: dhcp.Options{
+			dhcp.OptionSubnetMask:       []byte{255, 255, 240, 0},
+			dhcp.OptionRouter:           []byte(serverIP), // Presuming Server is also your router
+			dhcp.OptionDomainNameServer: []byte(serverIP), // Presuming Server is also your DNS server
+		},
+	}
+	log.Fatal(dhcp.ListenAndServe(handler))
+	// log.Fatal(dhcp.ListenAndServeIf("eth0",handler)) // Select interface on multi interface device
+}
+
+type lease struct {
+	nic    string    // Client's CHAddr
+	expiry time.Time // When the lease expires
+}
+
 type DHCPHandler struct {
 	ip            net.IP        // Server IP to use
 	options       dhcp.Options  // Options to send to DHCP Clients
@@ -19,35 +43,9 @@ type DHCPHandler struct {
 	leases        map[int]lease // Map to keep track of leases
 }
 
-type lease struct {
-	nic    string    // Client's CHAddr
-	expiry time.Time // When the lease expires
-}
-
-func SetupHandler() *DHCPHandler {
-	handler := &DHCPHandler{
-		ip:            net.IP{172, 30, 0, 1},
-		leaseDuration: 2 * time.Hour,
-		start:         net.IP{172, 30, 0, 2},
-		leaseRange:    50,
-		leases:        make(map[int]lease, 10),
-	}
-	handler.options = dhcp.Options{
-		dhcp.OptionSubnetMask:       []byte{255, 255, 240, 0},
-		dhcp.OptionRouter:           []byte(handler.ip), // Presuming Server is also your router
-		dhcp.OptionDomainNameServer: []byte(handler.ip), // Presuming Server is also your DNS server
-	}
-	return handler
-}
-
-// Example using DHCP with a single network interface device
-func ExampleListenAndServe() {
-	log.Fatal(dhcp.ListenAndServe(SetupHandler()))
-	// log.Fatal(dhcp.ListenAndServeIf("eth0",SetupHandler())) // Select interface on multi interface device
-}
-
 func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options dhcp.Options) (d dhcp.Packet) {
 	switch msgType {
+
 	case dhcp.Discover:
 		free, nic := -1, p.CHAddr().String()
 		for i, v := range h.leases { // Find previous lease
@@ -62,6 +60,7 @@ func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options
 	reply:
 		return dhcp.ReplyPacket(p, dhcp.Offer, h.ip, dhcp.IPAdd(h.start, free), h.leaseDuration,
 			h.options.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
+
 	case dhcp.Request:
 		if server, ok := options[dhcp.OptionServerIdentifier]; ok && !net.IP(server).Equal(h.ip) {
 			return nil // Message not for this dhcp server
@@ -76,6 +75,7 @@ func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options
 			}
 		}
 		return dhcp.ReplyPacket(p, dhcp.NAK, h.ip, nil, 0, nil)
+
 	case dhcp.Release, dhcp.Decline:
 		nic := p.CHAddr().String()
 		for i, v := range h.leases {
