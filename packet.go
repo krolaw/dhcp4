@@ -289,6 +289,8 @@ const (
 	OptionStreetTalkServer                           OptionCode = 75
 	OptionStreetTalkDirectoryAssistance              OptionCode = 76
 
+	OptionRelayAgentInformation OptionCode = 82
+
 	// DHCP Extensions
 	OptionRequestedIPAddress     OptionCode = 50
 	OptionIPAddressLeaseTime     OptionCode = 51
