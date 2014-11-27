@@ -1,8 +1,9 @@
 package dhcp4
 
 import (
-	"code.google.com/p/go.net/ipv4"
 	"net"
+
+	"golang.org/x/net/ipv4"
 )
 
 type serveIfConn struct {
