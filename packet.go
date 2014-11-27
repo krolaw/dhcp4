@@ -24,7 +24,7 @@ type Packet []byte
 func (p Packet) OpCode() OpCode { return OpCode(p[0]) }
 func (p Packet) HType() byte    { return p[1] }
 func (p Packet) HLen() byte     { return p[2] }
-func (p Packet) Hops() byte     { return p[3] } // Never Used?
+func (p Packet) Hops() byte     { return p[3] }
 func (p Packet) XId() []byte    { return p[4:8] }
 func (p Packet) Secs() []byte   { return p[8:10] } // Never Used?
 func (p Packet) Flags() []byte  { return p[10:12] }
@@ -80,6 +80,7 @@ func (p Packet) SetCHAddr(a net.HardwareAddr) {
 }
 func (p Packet) SetHType(hType byte)     { p[1] = hType }
 func (p Packet) SetCookie(cookie []byte) { copy(p.Cookie(), cookie) }
+func (p Packet) SetHops(hops byte)       { p[3] = hops }
 func (p Packet) SetXId(xId []byte)       { copy(p.XId(), xId) }
 func (p Packet) SetSecs(secs []byte)     { copy(p.Secs(), secs) }
 func (p Packet) SetFlags(flags []byte)   { copy(p.Flags(), flags) }
