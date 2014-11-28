@@ -21,6 +21,10 @@ func (s *serveIfConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 }
 
 func (s *serveIfConn) WriteTo(b []byte, addr net.Addr) (n int, err error) {
+	if !s.cm.Dst.Equal(net.IPv4bcast) {
+		s.cm.Src, s.cm.Dst = s.cm.Dst, s.cm.Src
+	}
+
 	return s.conn.WriteTo(b, s.cm, addr)
 }
 
