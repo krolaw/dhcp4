@@ -37,7 +37,7 @@ func (p Packet) CHAddr() net.HardwareAddr {
 	if hLen > 16 { // Prevent chaddr exceeding p boundary
 		hLen = 16
 	}
-	return net.HardwareAddr(p[28 : 28+p.HLen()]) // max endPos 44
+	return net.HardwareAddr(p[28 : 28+hLen]) // max endPos 44
 }
 
 // 192 bytes of zeros BOOTP legacy
