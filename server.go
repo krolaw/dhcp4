@@ -31,8 +31,8 @@ type ServeConn interface {
 // interface that the request was received from.  Writing a custom ServeConn,
 // or using ServeIf() can provide a workaround to this problem.
 func Serve(conn ServeConn, handler Handler) error {
-	buffer := make([]byte, 1500)
 	for {
+		buffer := make([]byte, 1500)
 		n, addr, err := conn.ReadFrom(buffer)
 		if err != nil {
 			return err
