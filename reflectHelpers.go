@@ -20,11 +20,11 @@ type ipV4Double_byte    []byte   // "1.2.3.4 255.255.255.0"   -> [1 2 3 4 255 25
 type ipV4Double_byteArr []byte   // ["1.2.3.4 255.255.255.0", "10.20.30.40 255.255.0.0"] -> [1 2 3 4 255 255 255 0 10 20 30 40 255 255 0 0]
 
 // Convert *int* to []byte (big-endian) when unmarshal
-type  int32_byte    []byte   // "124"   -> [0 0 0 124]
-type uint32_byte    []byte   // "124"   -> [0 0 0 124]
-type uint16_byte    []byte   // "124"   -> [0 124]
-type uint8_byte     []byte   // "124"   -> [124]
-type uint16_byteArr []byte   // [1,2,4] -> [0 1 0 2 0 4]
+type  int32_byte    []byte   // "-124"   -> [255 255 255 132]
+type uint32_byte    []byte   //  "124"   -> [0 0 0 124]
+type uint16_byte    []byte   //  "124"   -> [0 124]
+type uint8_byte     []byte   //  "124"   -> [124]
+type uint16_byteArr []byte   //  [1,2,4] -> [0 1 0 2 0 4]
 
 // Convert bool-flag to []byte when unmarshal
 type flag_byte []byte     // true -> [1]
