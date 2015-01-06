@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net"
 	"strings"
+	"encoding/binary"
 	"errors"
 )
 
@@ -89,7 +90,13 @@ func (i  *int32_byte)     UnmarshalJSON(b []byte) error {
 
 	var err = json.Unmarshal(b, &it)
 	if err == nil {
-		*i = []byte{byte(it)}
+		*i = make([]byte,4)
+		var uit uint32;
+
+		if it >= 0 { uit = uint32(it)
+		}else      { uit = ^uint32(0)-uint32(^it) }
+
+		binary.BigEndian.PutUint32(*i, uit)
 	}
 
 	return err
@@ -99,7 +106,8 @@ func (i *uint32_byte)     UnmarshalJSON(b []byte) error {
 
 	var err = json.Unmarshal(b, &it)
 	if err == nil {
-		*i = []byte{byte(it)}
+		*i = make([]byte,4)
+		binary.BigEndian.PutUint32(*i, it)
 	}
 
 	return err
@@ -109,7 +117,8 @@ func (i *uint16_byte)     UnmarshalJSON(b []byte) error {
 
 	var err = json.Unmarshal(b, &it)
 	if err == nil {
-		*i = []byte{byte(it)}
+		*i = make([]byte,2)
+		binary.BigEndian.PutUint16(*i, it)
 	}
 
 	return err
