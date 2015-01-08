@@ -257,7 +257,6 @@ const (
 	OptionStaticRoute               OptionCode = 33
 
 	// Link Layer Parameters per Interface
-	OptionLinkLayerParametersPerInterface OptionCode = 34
 	OptionTrailerEncapsulation            OptionCode = 34
 	OptionARPCacheTimeout                 OptionCode = 35
 	OptionEthernetEncapsulation           OptionCode = 36
