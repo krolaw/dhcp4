@@ -1,8 +1,9 @@
 // Implement reflect helpers for unmarshal JSON object into Options map
 
-package dhcp4
+package reflectDHCP
 
 import (
+	"github.com/krolaw/dhcp4"
 	"reflect"
 	"encoding/json"
 	"net"
@@ -277,109 +278,113 @@ type optionsAll_byte struct{
  http://linux.die.net/man/5/dhcp-options
 */
 
+// Local dhcp4.OptionCode
+type OptionCode dhcp4.OptionCode
+
 // UnmarshalJSON implements the json.Unmarshaler interface.
 // The option code is expected to be a quoted string.
 func (oc *OptionCode) UnmarshalJSON(b []byte) error {
+	var oct = (*dhcp4.OptionCode)(oc)
 	str := strings.Trim(string(b), `"`)
 
 	switch str {
-	case "End":                    *oc = End
-	case "Pad":                    *oc = Pad
-	case "SubnetMask":             *oc = OptionSubnetMask
-	case "TimeOffset":             *oc = OptionTimeOffset
-	case "Router":                 *oc = OptionRouter
-	case "TimeServer":             *oc = OptionTimeServer
-	case "NameServer":             *oc = OptionNameServer
-	case "DomainNameServer":       *oc = OptionDomainNameServer
-	case "LogServer":              *oc = OptionLogServer
-	case "CookieServer":           *oc = OptionCookieServer
-	case "LPRServer":              *oc = OptionLPRServer
-	case "ImpressServer":          *oc = OptionImpressServer
-	case "ResourceLocationServer": *oc = OptionResourceLocationServer
-	case "HostName":               *oc = OptionHostName
-	case "BootFileSize":           *oc = OptionBootFileSize
-	case "MeritDumpFile":          *oc = OptionMeritDumpFile
-	case "DomainName":             *oc = OptionDomainName
-	case "SwapServer":             *oc = OptionSwapServer
-	case "RootPath":               *oc = OptionRootPath
-	case "ExtensionsPath":         *oc = OptionExtensionsPath
+	case "End":                    *oct = dhcp4.End
+	case "Pad":                    *oct = dhcp4.Pad
+	case "SubnetMask":             *oct = dhcp4.OptionSubnetMask
+	case "TimeOffset":             *oct = dhcp4.OptionTimeOffset
+	case "Router":                 *oct = dhcp4.OptionRouter
+	case "TimeServer":             *oct = dhcp4.OptionTimeServer
+	case "NameServer":             *oct = dhcp4.OptionNameServer
+	case "DomainNameServer":       *oct = dhcp4.OptionDomainNameServer
+	case "LogServer":              *oct = dhcp4.OptionLogServer
+	case "CookieServer":           *oct = dhcp4.OptionCookieServer
+	case "LPRServer":              *oct = dhcp4.OptionLPRServer
+	case "ImpressServer":          *oct = dhcp4.OptionImpressServer
+	case "ResourceLocationServer": *oct = dhcp4.OptionResourceLocationServer
+	case "HostName":               *oct = dhcp4.OptionHostName
+	case "BootFileSize":           *oct = dhcp4.OptionBootFileSize
+	case "MeritDumpFile":          *oct = dhcp4.OptionMeritDumpFile
+	case "DomainName":             *oct = dhcp4.OptionDomainName
+	case "SwapServer":             *oct = dhcp4.OptionSwapServer
+	case "RootPath":               *oct = dhcp4.OptionRootPath
+	case "ExtensionsPath":         *oct = dhcp4.OptionExtensionsPath
 
 		// IP Layer Parameters per Host
-	case "IPForwardingEnableDisable":          *oc = OptionIPForwardingEnableDisable
-	case "NonLocalSourceRoutingEnableDisable": *oc = OptionNonLocalSourceRoutingEnableDisable
-	case "PolicyFilter":                       *oc = OptionPolicyFilter
-	case "MaximumDatagramReassemblySize":      *oc = OptionMaximumDatagramReassemblySize
-	case "DefaultIPTimeToLive":                *oc = OptionDefaultIPTimeToLive
-	case "PathMTUAgingTimeout":                *oc = OptionPathMTUAgingTimeout
-	case "PathMTUPlateauTable":                *oc = OptionPathMTUPlateauTable
+	case "IPForwardingEnableDisable":          *oct = dhcp4.OptionIPForwardingEnableDisable
+	case "NonLocalSourceRoutingEnableDisable": *oct = dhcp4.OptionNonLocalSourceRoutingEnableDisable
+	case "PolicyFilter":                       *oct = dhcp4.OptionPolicyFilter
+	case "MaximumDatagramReassemblySize":      *oct = dhcp4.OptionMaximumDatagramReassemblySize
+	case "DefaultIPTimeToLive":                *oct = dhcp4.OptionDefaultIPTimeToLive
+	case "PathMTUAgingTimeout":                *oct = dhcp4.OptionPathMTUAgingTimeout
+	case "PathMTUPlateauTable":                *oct = dhcp4.OptionPathMTUPlateauTable
 
 		// IP Layer Parameters per Interface
-	case "InterfaceMTU":              *oc = OptionInterfaceMTU
-	case "AllSubnetsAreLocal":        *oc = OptionAllSubnetsAreLocal
-	case "BroadcastAddress":          *oc = OptionBroadcastAddress
-	case "PerformMaskDiscovery":      *oc = OptionPerformMaskDiscovery
-	case "MaskSupplier":              *oc = OptionMaskSupplier
-	case "PerformRouterDiscovery":    *oc = OptionPerformRouterDiscovery
-	case "RouterSolicitationAddress": *oc = OptionRouterSolicitationAddress
-	case "StaticRoute":               *oc = OptionStaticRoute
+	case "InterfaceMTU":              *oct = dhcp4.OptionInterfaceMTU
+	case "AllSubnetsAreLocal":        *oct = dhcp4.OptionAllSubnetsAreLocal
+	case "BroadcastAddress":          *oct = dhcp4.OptionBroadcastAddress
+	case "PerformMaskDiscovery":      *oct = dhcp4.OptionPerformMaskDiscovery
+	case "MaskSupplier":              *oct = dhcp4.OptionMaskSupplier
+	case "PerformRouterDiscovery":    *oct = dhcp4.OptionPerformRouterDiscovery
+	case "RouterSolicitationAddress": *oct = dhcp4.OptionRouterSolicitationAddress
+	case "StaticRoute":               *oct = dhcp4.OptionStaticRoute
 
 		// Link Layer Parameters per Interface
-		//case "LinkLayerParametersPerInterface": *oc = OptionLinkLayerParametersPerInterface
-	case "TrailerEncapsulation":            *oc = OptionTrailerEncapsulation
-	case "ARPCacheTimeout":                 *oc = OptionARPCacheTimeout
-	case "EthernetEncapsulation":           *oc = OptionEthernetEncapsulation
+		//case "LinkLayerParametersPerInterface": *oc = dhcp4.OptionLinkLayerParametersPerInterface
+	case "TrailerEncapsulation":            *oct = dhcp4.OptionTrailerEncapsulation
+	case "ARPCacheTimeout":                 *oct = dhcp4.OptionARPCacheTimeout
+	case "EthernetEncapsulation":           *oct = dhcp4.OptionEthernetEncapsulation
 
 		// TCP Parameters
-	case "TCPDefaultTTL":        *oc = OptionTCPDefaultTTL
-	case "TCPKeepaliveInterval": *oc = OptionTCPKeepaliveInterval
-	case "TCPKeepaliveGarbage":  *oc = OptionTCPKeepaliveGarbage
+	case "TCPDefaultTTL":        *oct = dhcp4.OptionTCPDefaultTTL
+	case "TCPKeepaliveInterval": *oct = dhcp4.OptionTCPKeepaliveInterval
+	case "TCPKeepaliveGarbage":  *oct = dhcp4.OptionTCPKeepaliveGarbage
 
 		// Application and Service Parameters
-	case "NetworkInformationServiceDomain":            *oc = OptionNetworkInformationServiceDomain
-	case "NetworkInformationServers":                  *oc = OptionNetworkInformationServers
-	case "NetworkTimeProtocolServers":                 *oc = OptionNetworkTimeProtocolServers
-	case "VendorSpecificInformation":                  *oc = OptionVendorSpecificInformation
-	case "NetBIOSOverTCPIPNameServer":                 *oc = OptionNetBIOSOverTCPIPNameServer
-	case "NetBIOSOverTCPIPDatagramDistributionServer": *oc = OptionNetBIOSOverTCPIPDatagramDistributionServer
-	case "NetBIOSOverTCPIPNodeType":                   *oc = OptionNetBIOSOverTCPIPNodeType
-	case "NetBIOSOverTCPIPScope":                      *oc = OptionNetBIOSOverTCPIPScope
-	case "XWindowSystemFontServer":                    *oc = OptionXWindowSystemFontServer
-	case "XWindowSystemDisplayManager":                *oc = OptionXWindowSystemDisplayManager
-	case "NetworkInformationServicePlusDomain":        *oc = OptionNetworkInformationServicePlusDomain
-	case "NetworkInformationServicePlusServers":       *oc = OptionNetworkInformationServicePlusServers
-	case "MobileIPHomeAgent":                          *oc = OptionMobileIPHomeAgent
-	case "SimpleMailTransportProtocol":                *oc = OptionSimpleMailTransportProtocol
-	case "PostOfficeProtocolServer":                   *oc = OptionPostOfficeProtocolServer
-	case "NetworkNewsTransportProtocol":               *oc = OptionNetworkNewsTransportProtocol
-	case "DefaultWorldWideWebServer":                  *oc = OptionDefaultWorldWideWebServer
-	case "DefaultFingerServer":                        *oc = OptionDefaultFingerServer
-	case "DefaultInternetRelayChatServer":             *oc = OptionDefaultInternetRelayChatServer
-	case "StreetTalkServer":                           *oc = OptionStreetTalkServer
-	case "StreetTalkDirectoryAssistance":              *oc = OptionStreetTalkDirectoryAssistance
+	case "NetworkInformationServiceDomain":            *oct = dhcp4.OptionNetworkInformationServiceDomain
+	case "NetworkInformationServers":                  *oct = dhcp4.OptionNetworkInformationServers
+	case "NetworkTimeProtocolServers":                 *oct = dhcp4.OptionNetworkTimeProtocolServers
+	case "VendorSpecificInformation":                  *oct = dhcp4.OptionVendorSpecificInformation
+	case "NetBIOSOverTCPIPNameServer":                 *oct = dhcp4.OptionNetBIOSOverTCPIPNameServer
+	case "NetBIOSOverTCPIPDatagramDistributionServer": *oct = dhcp4.OptionNetBIOSOverTCPIPDatagramDistributionServer
+	case "NetBIOSOverTCPIPNodeType":                   *oct = dhcp4.OptionNetBIOSOverTCPIPNodeType
+	case "NetBIOSOverTCPIPScope":                      *oct = dhcp4.OptionNetBIOSOverTCPIPScope
+	case "XWindowSystemFontServer":                    *oct = dhcp4.OptionXWindowSystemFontServer
+	case "XWindowSystemDisplayManager":                *oct = dhcp4.OptionXWindowSystemDisplayManager
+	case "NetworkInformationServicePlusDomain":        *oct = dhcp4.OptionNetworkInformationServicePlusDomain
+	case "NetworkInformationServicePlusServers":       *oct = dhcp4.OptionNetworkInformationServicePlusServers
+	case "MobileIPHomeAgent":                          *oct = dhcp4.OptionMobileIPHomeAgent
+	case "SimpleMailTransportProtocol":                *oct = dhcp4.OptionSimpleMailTransportProtocol
+	case "PostOfficeProtocolServer":                   *oct = dhcp4.OptionPostOfficeProtocolServer
+	case "NetworkNewsTransportProtocol":               *oct = dhcp4.OptionNetworkNewsTransportProtocol
+	case "DefaultWorldWideWebServer":                  *oct = dhcp4.OptionDefaultWorldWideWebServer
+	case "DefaultFingerServer":                        *oct = dhcp4.OptionDefaultFingerServer
+	case "DefaultInternetRelayChatServer":             *oct = dhcp4.OptionDefaultInternetRelayChatServer
+	case "StreetTalkServer":                           *oct = dhcp4.OptionStreetTalkServer
+	case "StreetTalkDirectoryAssistance":              *oct = dhcp4.OptionStreetTalkDirectoryAssistance
 
-	case "RelayAgentInformation": *oc = OptionRelayAgentInformation
+	case "RelayAgentInformation": *oct = dhcp4.OptionRelayAgentInformation
 
 		// DHCP Extensions
-	case "RequestedIPAddress":     *oc = OptionRequestedIPAddress
-	case "IPAddressLeaseTime":     *oc = OptionIPAddressLeaseTime
-	case "Overload":               *oc = OptionOverload
-	case "DHCPMessageType":        *oc = OptionDHCPMessageType
-	case "ServerIdentifier":       *oc = OptionServerIdentifier
-	case "ParameterRequestList":   *oc = OptionParameterRequestList
-	case "Message":                *oc = OptionMessage
-	case "MaximumDHCPMessageSize": *oc = OptionMaximumDHCPMessageSize
-	case "RenewalTimeValue":       *oc = OptionRenewalTimeValue
-	case "RebindingTimeValue":     *oc = OptionRebindingTimeValue
-	case "VendorClassIdentifier":  *oc = OptionVendorClassIdentifier
-	case "ClientIdentifier":       *oc = OptionClientIdentifier
+	case "RequestedIPAddress":     *oct = dhcp4.OptionRequestedIPAddress
+	case "IPAddressLeaseTime":     *oct = dhcp4.OptionIPAddressLeaseTime
+	case "Overload":               *oct = dhcp4.OptionOverload
+	case "DHCPMessageType":        *oct = dhcp4.OptionDHCPMessageType
+	case "ServerIdentifier":       *oct = dhcp4.OptionServerIdentifier
+	case "ParameterRequestList":   *oct = dhcp4.OptionParameterRequestList
+	case "Message":                *oct = dhcp4.OptionMessage
+	case "MaximumDHCPMessageSize": *oct = dhcp4.OptionMaximumDHCPMessageSize
+	case "RenewalTimeValue":       *oct = dhcp4.OptionRenewalTimeValue
+	case "RebindingTimeValue":     *oct = dhcp4.OptionRebindingTimeValue
+	case "VendorClassIdentifier":  *oct = dhcp4.OptionVendorClassIdentifier
+	case "ClientIdentifier":       *oct = dhcp4.OptionClientIdentifier
 
-	case "TFTPServerName": *oc = OptionTFTPServerName
-	case "BootFileName":   *oc = OptionBootFileName
+	case "TFTPServerName": *oct = dhcp4.OptionTFTPServerName
+	case "BootFileName":   *oct = dhcp4.OptionBootFileName
 
-	case "TZPOSIXString":    *oc = OptionTZPOSIXString
-	case "TZDatabaseString": *oc = OptionTZDatabaseString
+	case "TZPOSIXString":    *oct = dhcp4.OptionTZPOSIXString
+	case "TZDatabaseString": *oct = dhcp4.OptionTZDatabaseString
 
-	case "ClasslessRouteFormat": *oc = OptionClasslessRouteFormat
+	case "ClasslessRouteFormat": *oct = dhcp4.OptionClasslessRouteFormat
 
 
 	default: return errors.New("DHCP Option name is not correct: " + str);
@@ -387,6 +392,9 @@ func (oc *OptionCode) UnmarshalJSON(b []byte) error {
 
 	return nil
 }
+
+// Local dhcp4.Options
+type Options dhcp4.Options
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
 // The options is expected to be a valid JSON object.
@@ -402,7 +410,7 @@ func (o *Options) UnmarshalJSON(b []byte) error {
 
 			if err = oc.UnmarshalJSON([]byte(s.Type().Field(i).Name)); err == nil {
 				if val := s.Field(i).Bytes(); len(val) != 0 {
-					(*o)[oc] = val
+					(*o)[dhcp4.OptionCode(oc)] = val
 				}
 			}
 		}

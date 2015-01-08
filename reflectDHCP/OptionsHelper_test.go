@@ -1,8 +1,9 @@
 // Simple tests for reflect helpers
 
-package dhcp4
+package reflectDHCP
 
 import (
+	"github.com/krolaw/dhcp4"
 	"testing"
 	"encoding/json"
 	"bytes"
@@ -155,21 +156,57 @@ func TestJSONUnmarshal_Options(t *testing.T){
 		"PathMTUPlateauTable": [1,2,4]
 	}`)
 	var mapV = Options{
-		OptionSubnetMask:                []byte{255,255,255,0},
-		OptionTimeOffset:                []byte{255,255,255,132},
-		OptionRouter:                    []byte{1,2,3,4,10,20,30,40},
-		OptionHostName:                  []byte{'l','o','c','a','l','h','o','s','t'},
-		OptionBootFileSize:              []byte{0,124},
-		OptionIPForwardingEnableDisable: []byte{1},
-		OptionPolicyFilter:              []byte{1,2,3,4,255,255,255,0,10,20,30,40,255,255,0,0},
-		OptionDefaultIPTimeToLive:       []byte{124},
-		OptionPathMTUAgingTimeout:       []byte{0,0,0,124},
-		OptionPathMTUPlateauTable:       []byte{0,1,0,2,0,4},
+		dhcp4.OptionSubnetMask:                []byte{255,255,255,0},
+		dhcp4.OptionTimeOffset:                []byte{255,255,255,132},
+		dhcp4.OptionRouter:                    []byte{1,2,3,4,10,20,30,40},
+		dhcp4.OptionHostName:                  []byte{'l','o','c','a','l','h','o','s','t'},
+		dhcp4.OptionBootFileSize:              []byte{0,124},
+		dhcp4.OptionIPForwardingEnableDisable: []byte{1},
+		dhcp4.OptionPolicyFilter:              []byte{1,2,3,4,255,255,255,0,10,20,30,40,255,255,0,0},
+		dhcp4.OptionDefaultIPTimeToLive:       []byte{124},
+		dhcp4.OptionPathMTUAgingTimeout:       []byte{0,0,0,124},
+		dhcp4.OptionPathMTUPlateauTable:       []byte{0,1,0,2,0,4},
 	}
 
 	var opt = Options{}
 
 	if err := json.Unmarshal(strO, &opt); err != nil {
+		t.Fatal("Error in Unmarshal: ", err)
+	}
+	if !reflect.DeepEqual(opt, mapV) {
+		t.Fatal(opt, " != ", mapV)
+	}
+}
+
+func TestJSONUnmarshal_OptionsCast(t *testing.T){
+	var strO = []byte(`{
+		"SubnetMask": "255.255.255.0",
+		"TimeOffset": -124,
+		"Router": ["1.2.3.4","10.20.30.40"],
+		"HostName": "localhost",
+		"BootFileSize": 124,
+		"IPForwardingEnableDisable": true,
+		"PolicyFilter": ["1.2.3.4 255.255.255.0", "10.20.30.40 255.255.0.0"],
+		"DefaultIPTimeToLive": 124,
+		"PathMTUAgingTimeout": 124,
+		"PathMTUPlateauTable": [1,2,4]
+	}`)
+	var mapV = dhcp4.Options{
+		dhcp4.OptionSubnetMask:                []byte{255,255,255,0},
+		dhcp4.OptionTimeOffset:                []byte{255,255,255,132},
+		dhcp4.OptionRouter:                    []byte{1,2,3,4,10,20,30,40},
+		dhcp4.OptionHostName:                  []byte{'l','o','c','a','l','h','o','s','t'},
+		dhcp4.OptionBootFileSize:              []byte{0,124},
+		dhcp4.OptionIPForwardingEnableDisable: []byte{1},
+		dhcp4.OptionPolicyFilter:              []byte{1,2,3,4,255,255,255,0,10,20,30,40,255,255,0,0},
+		dhcp4.OptionDefaultIPTimeToLive:       []byte{124},
+		dhcp4.OptionPathMTUAgingTimeout:       []byte{0,0,0,124},
+		dhcp4.OptionPathMTUPlateauTable:       []byte{0,1,0,2,0,4},
+	}
+
+	var opt = dhcp4.Options{}
+
+	if err := json.Unmarshal(strO, (*Options)(&opt)); err != nil {
 		t.Fatal("Error in Unmarshal: ", err)
 	}
 	if !reflect.DeepEqual(opt, mapV) {
