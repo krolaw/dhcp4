@@ -308,6 +308,8 @@ const (
 	OptionTFTPServerName OptionCode = 66
 	OptionBootFileName   OptionCode = 67
 
+	OptionClientArchitecture OptionCode = 93
+
 	OptionTZPOSIXString    OptionCode = 100
 	OptionTZDatabaseString OptionCode = 101
 
