@@ -17,6 +17,15 @@ func (s *serveIfConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 	if s.cm != nil && s.cm.IfIndex != s.ifIndex { // Filter all other interfaces
 		n = 0 // Packets < 240 are filtered in Serve().
 	}
+	// Swap the source and destination addresses around, but only
+	// for messages sent to us directly. Else, make the sender be
+	// all zeroes.
+	if net.IPv4bcast.Equal(s.cm.Dst) {
+		s.cm.Src = net.IPv4zero
+	} else {
+		s.cm.Src = s.cm.Dst
+	}
+
 	return
 }
 
