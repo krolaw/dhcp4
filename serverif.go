@@ -21,6 +21,12 @@ func (s *serveIfConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 }
 
 func (s *serveIfConn) WriteTo(b []byte, addr net.Addr) (n int, err error) {
+
+	// ipv4 docs state that Src is "specify only", however testing by tfheen
+	// shows that Src IS populated.  Therefore, to reuse the control message,
+	// we set Src to nil to avoid the error "write udp4: invalid argument"
+	s.cm.Src = nil
+
 	return s.conn.WriteTo(b, s.cm, addr)
 }
 
