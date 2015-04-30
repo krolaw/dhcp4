@@ -65,7 +65,12 @@ func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options
 		if server, ok := options[dhcp.OptionServerIdentifier]; ok && !net.IP(server).Equal(h.ip) {
 			return nil // Message not for this dhcp server
 		}
-		if reqIP := net.IP(options[dhcp.OptionRequestedIPAddress]); len(reqIP) == 4 {
+		reqIP := net.IP(options[dhcp.OptionRequestedIPAddress])
+		if reqIP == nil {
+			reqIP = net.IP(p.CIAddr())
+		}
+
+		if len(reqIP) == 4 && !reqIP.Equal(net.IPv4zero) {
 			if leaseNum := dhcp.IPRange(h.start, reqIP) - 1; leaseNum >= 0 && leaseNum < h.leaseRange {
 				if l, exists := h.leases[leaseNum]; !exists || l.nic == p.CHAddr().String() {
 					h.leases[leaseNum] = lease{nic: p.CHAddr().String(), expiry: time.Now().Add(h.leaseDuration)}
