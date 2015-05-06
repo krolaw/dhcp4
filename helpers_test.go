@@ -3,8 +3,39 @@ package dhcp4
 import (
 	"bytes"
 	"net"
+	"reflect"
+	"sort"
 	"testing"
+	"time"
 )
+
+// Verify that all options are returned by Options.SelectOrderOrAll if
+// the input order value is nil.
+func TestSelectOrderOrAllNil(t *testing.T) {
+	assertOptionsSlices(t, 0, "nil order", allOptionsSlice, optMap.SelectOrderOrAll(nil))
+}
+
+// Verify that all options are returned by Options.SelectOrderOrAll if
+// the input order value is not nil over several tests.
+func TestSelectOrderOrAllNotNil(t *testing.T) {
+	for i, tt := range selectOrderTests {
+		assertOptionsSlices(t, i, tt.description, tt.result, optMap.SelectOrderOrAll(tt.order))
+	}
+}
+
+// Verify that no options are returned by Options.SelectOrder if
+// the input order value is nil.
+func TestSelectOrderNil(t *testing.T) {
+	assertOptionsSlices(t, 0, "nil order", nil, optMap.SelectOrder(nil))
+}
+
+// Verify that all options are returned by Options.SelectOrder if
+// the input order value is not nil over several tests.
+func TestSelectOrderNotNil(t *testing.T) {
+	for i, tt := range selectOrderTests {
+		assertOptionsSlices(t, i, tt.description, tt.result, optMap.SelectOrder(tt.order))
+	}
+}
 
 func TestIPRange(t *testing.T) {
 	var tests = []struct {
@@ -161,6 +192,45 @@ func TestIPInRange(t *testing.T) {
 	}
 }
 
+func TestOptionsLeaseTime(t *testing.T) {
+	var tests = []struct {
+		duration time.Duration
+		result   []byte
+	}{
+		{
+			duration: 0 * time.Second,
+			result:   []byte{0, 0, 0, 0},
+		},
+		{
+			duration: 2 * time.Second,
+			result:   []byte{0, 0, 0, 2},
+		},
+		{
+			duration: 60 * time.Second,
+			result:   []byte{0, 0, 0, 60},
+		},
+		{
+			duration: 6 * time.Hour,
+			result:   []byte{0, 0, 84, 96},
+		},
+		{
+			duration: 24 * time.Hour,
+			result:   []byte{0, 1, 81, 128},
+		},
+		{
+			duration: 365 * 24 * time.Hour,
+			result:   []byte{1, 225, 51, 128},
+		},
+	}
+
+	for _, tt := range tests {
+		if result := OptionsLeaseTime(tt.duration); !bytes.Equal(result, tt.result) {
+			t.Fatalf("OptionsLeaseTime(%s), unexpected result: %v != %v",
+				tt.duration, result, tt.result)
+		}
+	}
+}
+
 func TestJoinIPs(t *testing.T) {
 	var tests = []struct {
 		ips    []net.IP
@@ -190,4 +260,138 @@ func TestJoinIPs(t *testing.T) {
 				tt.ips, result, tt.result)
 		}
 	}
+}
+
+// byOptionCode implements sort.Interface for []Option.
+type byOptionCode []Option
+
+func (b byOptionCode) Len() int               { return len(b) }
+func (b byOptionCode) Less(i int, j int) bool { return b[i].Code < b[j].Code }
+func (b byOptionCode) Swap(i int, j int)      { b[i], b[j] = b[j], b[i] }
+
+// assertOptionsSlices is a test helper which verifies that two options slices
+// are identical.  Several parameters are passed for easy identification of
+// failing tests.
+func assertOptionsSlices(t *testing.T, i int, description string, want []Option, got []Option) {
+	// Verify slices are same length
+	if want, got := len(want), len(got); want != got {
+		t.Fatalf("%02d: test %q, mismatched length: %d != %d",
+			i, description, want, got)
+	}
+
+	// Sort slices
+	sort.Sort(byOptionCode(want))
+	sort.Sort(byOptionCode(got))
+
+	// Verify slices are identical
+	if len(want) > 0 && len(got) > 0 && !reflect.DeepEqual(want, got) {
+		t.Fatalf("%02d: test %q, unexpected options: %v != %v",
+			i, description, want, got)
+	}
+}
+
+// optMap is an Options map which contains a number of option
+// codes and values, used for testing.
+var optMap = Options{
+	OptionSubnetMask:       []byte{255, 255, 255, 0},
+	OptionRouter:           []byte{192, 168, 1, 1},
+	OptionDomainNameServer: []byte{192, 168, 1, 2},
+	OptionTimeServer:       []byte{192, 168, 1, 3},
+	OptionLogServer:        []byte{192, 168, 1, 4},
+}
+
+// allOptionsSlice is a []Option derived from optMap.  It is used
+// for some tests.
+var allOptionsSlice = []Option{
+	Option{
+		Code:  OptionSubnetMask,
+		Value: optMap[OptionSubnetMask],
+	},
+	Option{
+		Code:  OptionRouter,
+		Value: optMap[OptionRouter],
+	},
+	Option{
+		Code:  OptionDomainNameServer,
+		Value: optMap[OptionDomainNameServer],
+	},
+	Option{
+		Code:  OptionTimeServer,
+		Value: optMap[OptionTimeServer],
+	},
+	Option{
+		Code:  OptionLogServer,
+		Value: optMap[OptionLogServer],
+	},
+}
+
+// selectOrderTests is a set of tests used for Options.SelectOrder
+// and Options.SelectOrderOrAll methods.
+var selectOrderTests = []struct {
+	description string
+	order       []byte
+	result      []Option
+}{
+	{
+		description: "subnet mask only",
+		order: []byte{
+			byte(OptionSubnetMask),
+		},
+		result: []Option{
+			Option{
+				Code:  OptionSubnetMask,
+				Value: optMap[OptionSubnetMask],
+			},
+		},
+	},
+	{
+		description: "subnet mask and time server",
+		order: []byte{
+			byte(OptionSubnetMask),
+			byte(OptionTimeServer),
+		},
+		result: []Option{
+			Option{
+				Code:  OptionSubnetMask,
+				Value: optMap[OptionSubnetMask],
+			},
+			Option{
+				Code:  OptionTimeServer,
+				Value: optMap[OptionTimeServer],
+			},
+		},
+	},
+	{
+		description: "domain name server, time server, router",
+		order: []byte{
+			byte(OptionDomainNameServer),
+			byte(OptionTimeServer),
+			byte(OptionRouter),
+		},
+		result: []Option{
+			Option{
+				Code:  OptionDomainNameServer,
+				Value: optMap[OptionDomainNameServer],
+			},
+			Option{
+				Code:  OptionTimeServer,
+				Value: optMap[OptionTimeServer],
+			},
+			Option{
+				Code:  OptionRouter,
+				Value: optMap[OptionRouter],
+			},
+		},
+	},
+	{
+		description: "all options in order",
+		order: []byte{
+			byte(OptionSubnetMask),
+			byte(OptionRouter),
+			byte(OptionDomainNameServer),
+			byte(OptionTimeServer),
+			byte(OptionLogServer),
+		},
+		result: allOptionsSlice,
+	},
 }
