@@ -202,6 +202,8 @@ const (
 	BootReply   OpCode = 2 // From Server
 )
 
+//go:generate stringer -type=MessageType
+
 // DHCP Message Type 53
 const (
 	Discover MessageType = 1 // Broadcast Packet From Client - Can I have an IP?
@@ -257,9 +259,9 @@ const (
 	OptionStaticRoute               OptionCode = 33
 
 	// Link Layer Parameters per Interface
-	OptionTrailerEncapsulation            OptionCode = 34
-	OptionARPCacheTimeout                 OptionCode = 35
-	OptionEthernetEncapsulation           OptionCode = 36
+	OptionTrailerEncapsulation  OptionCode = 34
+	OptionARPCacheTimeout       OptionCode = 35
+	OptionEthernetEncapsulation OptionCode = 36
 
 	// TCP Parameters
 	OptionTCPDefaultTTL        OptionCode = 37
