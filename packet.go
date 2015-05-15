@@ -214,6 +214,8 @@ const (
 	Inform   MessageType = 8 // From Client, I have this IP and there's nothing you can do about it
 )
 
+//go:generate stringer -type=OptionCode
+
 // DHCP Options
 const (
 	End                          OptionCode = 255
@@ -257,9 +259,9 @@ const (
 	OptionStaticRoute               OptionCode = 33
 
 	// Link Layer Parameters per Interface
-	OptionTrailerEncapsulation            OptionCode = 34
-	OptionARPCacheTimeout                 OptionCode = 35
-	OptionEthernetEncapsulation           OptionCode = 36
+	OptionTrailerEncapsulation  OptionCode = 34
+	OptionARPCacheTimeout       OptionCode = 35
+	OptionEthernetEncapsulation OptionCode = 36
 
 	// TCP Parameters
 	OptionTCPDefaultTTL        OptionCode = 37
