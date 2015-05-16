@@ -202,6 +202,8 @@ const (
 	BootReply   OpCode = 2 // From Server
 )
 
+//go:generate stringer -type=MessageType
+
 // DHCP Message Type 53
 const (
 	Discover MessageType = 1 // Broadcast Packet From Client - Can I have an IP?
