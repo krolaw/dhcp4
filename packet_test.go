@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+func mustParseMAC(mac string) net.HardwareAddr {
+	hw, err := net.ParseMAC(mac)
+	if err != nil {
+		panic(err)
+	}
+	return hw
+}
+
 func TestNewPacket(t *testing.T) {
 	var tests = []struct {
 		description string
@@ -175,7 +183,7 @@ func TestRequestPacket(t *testing.T) {
 		{
 			description: "discover request",
 			mt:          Discover,
-			chAddr:      net.HardwareAddr([]byte("01:23:45:67:89:ab")),
+			chAddr:      mustParseMAC("01:23:45:67:89:ab"),
 			cIAddr:      net.IP([]byte{192, 168, 1, 1}),
 			xId:         []byte{0, 1, 2, 3},
 			broadcast:   true,
@@ -184,7 +192,7 @@ func TestRequestPacket(t *testing.T) {
 		{
 			description: "request request",
 			mt:          Request,
-			chAddr:      net.HardwareAddr([]byte("de:ad:be:ef:de:ad")),
+			chAddr:      mustParseMAC("de:ad:be:ef:de:ad"),
 			xId:         []byte{4, 5, 6, 7},
 			broadcast:   false,
 			options:     oneOptionSlice,
@@ -192,7 +200,7 @@ func TestRequestPacket(t *testing.T) {
 		{
 			description: "decline request",
 			mt:          Decline,
-			chAddr:      net.HardwareAddr([]byte("ff:ff:ff:ff:ff:ff")),
+			chAddr:      mustParseMAC("ff:ff:ff:ff:ff:ff"),
 			xId:         []byte{8, 9, 10, 11},
 			broadcast:   true,
 			options:     twoOptionsSlice,
