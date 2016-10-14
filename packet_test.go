@@ -175,7 +175,7 @@ func TestRequestPacket(t *testing.T) {
 		{
 			description: "discover request",
 			mt:          Discover,
-			chAddr:      net.HardwareAddr([]byte("01:23:45:67:89:ab")),
+			chAddr:      net.HardwareAddr{1, 35, 69, 103, 117, 171}, // 01:23:45:67:89:ab
 			cIAddr:      net.IP([]byte{192, 168, 1, 1}),
 			xId:         []byte{0, 1, 2, 3},
 			broadcast:   true,
@@ -184,7 +184,7 @@ func TestRequestPacket(t *testing.T) {
 		{
 			description: "request request",
 			mt:          Request,
-			chAddr:      net.HardwareAddr([]byte("de:ad:be:ef:de:ad")),
+			chAddr:      net.HardwareAddr{222, 173, 190, 239, 222, 173}, // de:ad:be:ef:de:ad
 			xId:         []byte{4, 5, 6, 7},
 			broadcast:   false,
 			options:     oneOptionSlice,
@@ -192,7 +192,7 @@ func TestRequestPacket(t *testing.T) {
 		{
 			description: "decline request",
 			mt:          Decline,
-			chAddr:      net.HardwareAddr([]byte("ff:ff:ff:ff:ff:ff")),
+			chAddr:      net.HardwareAddr{255, 255, 255, 255, 255, 255}, // ff:ff:ff:ff:ff:ff
 			xId:         []byte{8, 9, 10, 11},
 			broadcast:   true,
 			options:     twoOptionsSlice,
