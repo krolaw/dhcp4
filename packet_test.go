@@ -265,12 +265,11 @@ func TestReplyPacket(t *testing.T) {
 // behavior does not change.
 func newPacket(opCode OpCode) Packet {
 	const ethernetHType = 1
-	var cookie = []byte{99, 130, 83, 99}
 
 	p := make(Packet, 241)
 	p[0] = byte(opCode)
 	p[1] = ethernetHType
-	copy(p[236:240], cookie)
+	copy(p[236:240], MagicCookie)
 	p[240] = byte(End)
 
 	return p

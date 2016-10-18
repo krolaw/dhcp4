@@ -37,7 +37,7 @@ func Serve(conn ServeConn, handler Handler) error {
 		if err != nil {
 			return err
 		}
-		if n < 240 { // Packet too small to be DHCP
+		if n < MinimalPacketSize { // Packet too small to be DHCP
 			continue
 		}
 		req := Packet(buffer[:n])
