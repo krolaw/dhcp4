@@ -177,7 +177,9 @@ func ReplyPacket(req Packet, mt MessageType, serverId, yIAddr net.IP, leaseDurat
 	p.SetCHAddr(req.CHAddr())
 	p.AddOption(OptionDHCPMessageType, []byte{byte(mt)})
 	p.AddOption(OptionServerIdentifier, []byte(serverId))
-	p.AddOption(OptionIPAddressLeaseTime, OptionsLeaseTime(leaseDuration))
+	if leaseDuration > 0 {
+		p.AddOption(OptionIPAddressLeaseTime, OptionsLeaseTime(leaseDuration))
+	}
 	for _, o := range options {
 		p.AddOption(o.Code, o.Value)
 	}
