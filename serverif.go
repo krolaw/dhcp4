@@ -14,7 +14,7 @@ type serveIfConn struct {
 
 func (s *serveIfConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 	n, s.cm, addr, err = s.conn.ReadFrom(b)
-	if s.cm != nil && s.cm.IfIndex != s.ifIndex { // Filter all other interfaces
+	if s.ifIndex > -1 && s.cm != nil && s.cm.IfIndex != s.ifIndex { // Filter all other interfaces
 		n = 0 // Packets < 240 are filtered in Serve().
 	}
 	return
@@ -50,14 +50,20 @@ func ServeIf(ifIndex int, conn net.PacketConn, handler Handler) error {
 // Serve with handler to handle requests on incoming packets.
 // i.e. ListenAndServeIf("eth0",handler)
 func ListenAndServeIf(interfaceName string, handler Handler) error {
-	iface, err := net.InterfaceByName(interfaceName)
-	if err != nil {
-		return err
-	}
 	l, err := net.ListenPacket("udp4", ":67")
 	if err != nil {
 		return err
 	}
 	defer l.Close()
+
+	if interfaceName == "any" {
+		return ServeIf(-1, l, handler)
+	}
+
+	iface, err := net.InterfaceByName(interfaceName)
+	if err != nil {
+		return err
+	}
+
 	return ServeIf(iface.Index, l, handler)
 }
