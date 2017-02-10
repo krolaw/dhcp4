@@ -7,14 +7,19 @@ import (
 )
 
 type serveIfConn struct {
-	ifIndex int
-	conn    *ipv4.PacketConn
-	cm      *ipv4.ControlMessage
+	ifIndices []int
+	conn      *ipv4.PacketConn
+	cm        *ipv4.ControlMessage
 }
 
 func (s *serveIfConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 	n, s.cm, addr, err = s.conn.ReadFrom(b)
-	if s.cm != nil && s.cm.IfIndex != s.ifIndex { // Filter all other interfaces
+	if len(s.ifIndices) > 0 && s.cm != nil { // Filter all other interfaces
+		for _, v := range s.ifIndices {
+			if v == s.cm.IfIndex {
+				return
+			}
+		}
 		n = 0 // Packets < 240 are filtered in Serve().
 	}
 	return
@@ -30,34 +35,46 @@ func (s *serveIfConn) WriteTo(b []byte, addr net.Addr) (n int, err error) {
 	return s.conn.WriteTo(b, s.cm, addr)
 }
 
-// ServeIf does the same job as Serve(), but listens and responds on the
-// specified network interface (by index).  It also doubles as an example of
-// how to leverage the dhcp4.ServeConn interface.
+// ServeIfs does the same job as Serve(), but listens and responds on the
+// specified network interfaces (by index), or all if none specified.  It also
+// doubles as an example of how to leverage the dhcp4.ServeConn interface.
 //
 // If your target only has one interface, use Serve(). ServeIf() requires an
-// import outside the std library.  Serving DHCP over multiple interfaces will
-// require your own dhcp4.ServeConn, as listening to broadcasts utilises all
-// interfaces (so you cannot have more than on listener).
-func ServeIf(ifIndex int, conn net.PacketConn, handler Handler) error {
+// import outside the std library.
+func ServeIfs(conn net.PacketConn, handler Handler, ifIndices ...int) error {
 	p := ipv4.NewPacketConn(conn)
 	if err := p.SetControlMessage(ipv4.FlagInterface, true); err != nil {
 		return err
 	}
-	return Serve(&serveIfConn{ifIndex: ifIndex, conn: p}, handler)
+	return Serve(&serveIfConn{ifIndices: ifIndices, conn: p}, handler)
 }
 
-// ListenAndServe listens on the UDP network address addr and then calls
-// Serve with handler to handle requests on incoming packets.
-// i.e. ListenAndServeIf("eth0",handler)
-func ListenAndServeIf(interfaceName string, handler Handler) error {
-	iface, err := net.InterfaceByName(interfaceName)
-	if err != nil {
-		return err
+// ServeIf has been deprecated in favour of ServeIfs
+func ServeIf(ifIndex int, conn net.PacketConn, handler Handler) error {
+	return ServeIfs(conn, handler, ifIndex)
+}
+
+// ListenAndServeIfs listens on the specified UDP network interfaces (or all if
+// unspecifed) and then calls Serve to handle incoming packet requests.
+// i.e. ListenAndServeIfs(handler,"eth0","eth1")
+func ListenAndServeIfs(handler Handler, interfaceNames ...string) error {
+	ifaces := make([]int, len(interfaceNames))
+	for i, v := range interfaceNames {
+		iface, err := net.InterfaceByName(v)
+		if err != nil {
+			return err
+		}
+		ifaces[i] = iface.Index
 	}
 	l, err := net.ListenPacket("udp4", ":67")
 	if err != nil {
 		return err
 	}
 	defer l.Close()
-	return ServeIf(iface.Index, l, handler)
+	return ServeIfs(l, handler, ifaces...)
+}
+
+// ListenAndServeIf has been deprecated in favour of ListenAndServeIfs
+func ListenAndServeIf(interfaceName string, handler Handler) error {
+	return ListenAndServeIfs(handler, interfaceName)
 }
