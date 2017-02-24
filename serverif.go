@@ -14,9 +14,6 @@ type serveIfConn struct {
 
 func (s *serveIfConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 	n, s.cm, addr, err = s.conn.ReadFrom(b)
-	if s.cm != nil && s.cm.IfIndex != s.ifIndex { // Filter all other interfaces
-		n = 0 // Packets < 240 are filtered in Serve().
-	}
 	return
 }
 
@@ -38,8 +35,7 @@ func (s *serveIfConn) WriteTo(b []byte, addr net.Addr) (n int, err error) {
 // import outside the std library.  Serving DHCP over multiple interfaces will
 // require your own dhcp4.ServeConn, as listening to broadcasts utilises all
 // interfaces (so you cannot have more than on listener).
-func ServeIf(ifIndex int, conn net.PacketConn, handler Handler) error {
-	p := ipv4.NewPacketConn(conn)
+func ServeIf(ifIndex int, p *ipv4.PacketConn, handler Handler) error {
 	if err := p.SetControlMessage(ipv4.FlagInterface, true); err != nil {
 		return err
 	}
@@ -54,10 +50,41 @@ func ListenAndServeIf(interfaceName string, handler Handler) error {
 	if err != nil {
 		return err
 	}
-	l, err := net.ListenPacket("udp4", ":67")
+	ip := net.ParseIP("0.0.0.0")
+	p, err := broadcastOpen(ip, 67, interfaceName)
 	if err != nil {
 		return err
 	}
-	defer l.Close()
-	return ServeIf(iface.Index, l, handler)
+	defer p.Close()
+	return ServeIf(iface.Index, p, handler)
+}
+
+func broadcastOpen(bindAddr net.IP, port int, ifname string) (*ipv4.PacketConn, error) {
+	s, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, syscall.IPPROTO_UDP)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := syscall.SetsockoptInt(s, syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1); err != nil {
+		log.Fatal(err)
+	}
+	if err := syscall.SetsockoptString(s, syscall.SOL_SOCKET, syscall.SO_BINDTODEVICE, ifname); err != nil {
+		log.Fatal(err)
+	}
+
+	lsa := syscall.SockaddrInet4{Port: port}
+	copy(lsa.Addr[:], bindAddr.To4())
+
+	if err := syscall.Bind(s, &lsa); err != nil {
+		syscall.Close(s)
+		log.Fatal(err)
+	}
+	f := os.NewFile(uintptr(s), "")
+	c, err := net.FilePacketConn(f)
+	f.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	p := ipv4.NewPacketConn(c)
+
+	return p, nil
 }
