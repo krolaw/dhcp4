@@ -1,6 +1,7 @@
 package dhcp4
 
 import (
+	"context"
 	"net"
 	"strconv"
 )
@@ -31,9 +32,36 @@ type ServeConn interface {
 // interface that the request was received from.  Writing a custom ServeConn,
 // or using ServeIf() can provide a workaround to this problem.
 func Serve(conn ServeConn, handler Handler) error {
+	return ServeContext(context.Background(), conn, handler)
+}
+
+// ServeContext behaves like Serve but takes a context and will stop
+// the server when the context expires. It is expected that the
+// provided conn will be closed by the user upon termination.
+func ServeContext(ctx context.Context, conn ServeConn, handler Handler) error {
+	if ctx == nil {
+		panic("nil context")
+	}
 	buffer := make([]byte, 1500)
+	type readFromInfo struct {
+		n    int
+		addr net.Addr
+		err  error
+	}
+out:
 	for {
-		n, addr, err := conn.ReadFrom(buffer)
+		receive := make(chan readFromInfo)
+		var data readFromInfo
+		go func() {
+			n, addr, err := conn.ReadFrom(buffer)
+			receive <- readFromInfo{n, addr, err}
+		}()
+		select {
+		case <-ctx.Done():
+			break out
+		case data = <-receive:
+		}
+		n, addr, err := data.n, data.addr, data.err
 		if err != nil {
 			return err
 		}
@@ -70,6 +98,7 @@ func Serve(conn ServeConn, handler Handler) error {
 			}
 		}
 	}
+	return nil
 }
 
 // ListenAndServe listens on the UDP network address addr and then calls
