@@ -27,6 +27,9 @@ func NewUDP4BoundListener(interfaceName, laddr string) (pc net.PacketConn, e err
 	if err := syscall.SetsockoptInt(s, syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1); err != nil {
 		return nil, err
 	}
+	if err := syscall.SetsockoptInt(s, syscall.SOL_SOCKET, syscall.SO_BROADCAST, 1); err != nil {
+		return nil, err
+	}
 	if err := syscall.SetsockoptString(s, syscall.SOL_SOCKET, syscall.SO_BINDTODEVICE, interfaceName); err != nil {
 		return nil, err
 	}
