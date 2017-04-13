@@ -32,7 +32,7 @@ func NewUDP4BoundListener(interfaceName, laddr string) (pc net.PacketConn, e err
 	}
 
 	lsa := syscall.SockaddrInet4{Port: addr.Port}
-	copy(lsa.Addr[:], addr.IP)
+	copy(lsa.Addr[:], addr.IP.To4())
 
 	if err := syscall.Bind(s, &lsa); err != nil {
 		return nil, err
