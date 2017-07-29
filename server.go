@@ -17,8 +17,14 @@ type ServeConn interface {
 	WriteTo(b []byte, addr net.Addr) (n int, err error)
 }
 
-// Serve takes a ServeConn (such as a net.PacketConn) that it uses for both
-// reading and writing DHCP packets. Every packet is passed to the handler,
+// Serve takes a ServeConn (such as a net.PacketConn or dhcp4/conn) for reading
+// and writing DHCP packets. If either ReadFrom or WriteTo error (such as a
+// closed conn, or just time to exit), Serve exits and passes up the error.
+//
+// Every packet is passed to the Handler's ServeDHCP func.
+//
+//
+//
 // which processes it and optionally return a response packet for writing back
 // to the network.
 //

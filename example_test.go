@@ -26,7 +26,8 @@ func ExampleHandler() {
 		},
 	}
 	log.Fatal(dhcp.ListenAndServe(handler))
-	// log.Fatal(dhcp.ListenAndServeIf("eth0",handler)) // Select interface on multi interface device
+	// log.Fatal(dhcp.Serve(dhcp.NewUDP4BoundListener("eth0",":67"), handler)) // Select interface on multi interface device - just linux for now
+	// log.Fatal(dhcp.Serve(dhcp.NewUDP4FilterListener("en0",":67"), handler)) // Work around for other OSes
 }
 
 type lease struct {

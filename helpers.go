@@ -34,7 +34,6 @@ func (o Options) SelectOrder(order []byte) []Option {
 
 // IPRange returns how many ips in the ip range from start to stop (inclusive)
 func IPRange(start, stop net.IP) int {
-	//return int(Uint([]byte(stop))-Uint([]byte(start))) + 1
 	return int(binary.BigEndian.Uint32(stop.To4())) - int(binary.BigEndian.Uint32(start.To4())) + 1
 }
 
@@ -42,10 +41,8 @@ func IPRange(start, stop net.IP) int {
 // IPAdd(net.IP{192,168,1,1},30) returns net.IP{192.168.1.31}
 func IPAdd(start net.IP, add int) net.IP { // IPv4 only
 	start = start.To4()
-	//v := Uvarint([]byte(start))
 	result := make(net.IP, 4)
 	binary.BigEndian.PutUint32(result, binary.BigEndian.Uint32(start)+uint32(add))
-	//PutUint([]byte(result), v+uint64(add))
 	return result
 }
 
@@ -70,7 +67,6 @@ func IPInRange(start, stop, ip net.IP) bool {
 func OptionsLeaseTime(d time.Duration) []byte {
 	leaseBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(leaseBytes, uint32(d/time.Second))
-	//PutUvarint(leaseBytes, uint64(d/time.Second))
 	return leaseBytes
 }
 

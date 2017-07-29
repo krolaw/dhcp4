@@ -1,5 +1,3 @@
-// +build !linux
-
 package conn
 
 import (
@@ -7,6 +5,28 @@ import (
 
 	"golang.org/x/net/ipv4"
 )
+
+// Creates listener on all interfaces and then filters packets not received by interfaceName
+func NewUDP4FilterListener(interfaceName, laddr string) (c *serveIfConn, e error) {
+	iface, err := net.InterfaceByName(interfaceName)
+	if err != nil {
+		return nil, err
+	}
+	l, err := net.ListenPacket("udp4", laddr)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if e != nil {
+			l.Close()
+		}
+	}()
+	p := ipv4.NewPacketConn(l)
+	if err := p.SetControlMessage(ipv4.FlagInterface, true); err != nil {
+		return nil, err
+	}
+	return &serveIfConn{ifIndex: iface.Index, conn: p}, nil
+}
 
 type serveIfConn struct {
 	ifIndex int
@@ -35,26 +55,7 @@ func (s *serveIfConn) WriteTo(b []byte, addr net.Addr) (n int, err error) {
 
 func (s *serveIfConn) Close() error { return s.conn.Close() }
 
-// NewUDP4BoundListener creates a listening socket bound to a given interface.
-// In truth this
-// This is a work around connection.  It really listens on all interfaces
-func NewUDP4BoundListener(interfaceName, laddr string) (c *serveIfConn, e error) {
-	iface, err := net.InterfaceByName(interfaceName)
-	if err != nil {
-		return err
-	}
-	l, err := net.ListenPacket("udp4", ":67")
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if e != nil {
-			l.Close()
-		}
-	}()
-	p := ipv4.NewPacketConn(l)
-	if err := p.SetControlMessage(ipv4.FlagInterface, true); err != nil {
-		return nil, err
-	}
-	return &serveIfConn{ifIndex: ifIndex, conn: p}, nil
+// Function only exists to support deprecated dhcp4/ServeIf DO NOT USE
+func NewServeIf(ifIndex int, p *ipv4.PacketConn) *serveIfConn {
+	return &serveIfConn{ifIndex: ifIndex, conn: p}
 }
