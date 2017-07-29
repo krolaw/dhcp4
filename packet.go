@@ -320,6 +320,8 @@ const (
 	OptionTZPOSIXString    OptionCode = 100
 	OptionTZDatabaseString OptionCode = 101
 
+	OptionDomainSearch OptionCode = 119
+
 	OptionClasslessRouteFormat OptionCode = 121
 )
 
