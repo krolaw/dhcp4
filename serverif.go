@@ -1,5 +1,6 @@
 package dhcp4
 
+/*
 import (
 	"net"
 
@@ -26,3 +27,4 @@ func ListenAndServeIf(interfaceName string, handler Handler) error {
 	defer l.Close()
 	return Serve(l, handler)
 }
+*/
