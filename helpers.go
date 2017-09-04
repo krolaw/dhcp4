@@ -7,7 +7,7 @@ import (
 )
 
 // SelectOrderOrAll has same functionality as SelectOrder, except if the order
-// param is nil, whereby all options are added (in arbitary order).
+// param is nil, whereby all options are added (in arbitrary order).
 func (o Options) SelectOrderOrAll(order []byte) []Option {
 	if order == nil {
 		opts := make([]Option, 0, len(o))
