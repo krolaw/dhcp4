@@ -46,8 +46,9 @@ func Serve(conn ServeConn, handler Handler) error {
 		if n < 240 { // Packet too small to be DHCP
 			continue
 		}
-		req := Packet(buffer[:n])
-		if req.HLen() > 16 { // Invalid size
+
+		req := append(Packet(nil), Packet(buffer[:n])...) // Force a copy
+		if req.HLen() > 16 {                              // Invalid size
 			continue
 		}
 		options := req.ParseOptions()
