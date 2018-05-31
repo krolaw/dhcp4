@@ -17,6 +17,37 @@ type ServeConn interface {
 	WriteTo(b []byte, addr net.Addr) (n int, err error)
 }
 
+// destIP selects the destination IP address to which to send the reply message
+// as per https://tools.ietf.org/html/rfc2131#section-4.1
+func destIP(req Packet) net.IP {
+	if !req.GIAddr().Equal(net.IPv4zero) {
+		return req.GIAddr() //  BOOTP relay agent
+	}
+
+	if !req.CIAddr().Equal(net.IPv4zero) {
+		return req.CIAddr()
+	}
+
+	if req.Broadcast() {
+		return net.IPv4bcast
+	}
+
+	if !req.YIAddr().Equal(net.IPv4zero) {
+		return req.YIAddr()
+	}
+
+	return net.IPv4bcast
+}
+
+func destAddr(addr net.Addr, req Packet) *net.UDPAddr {
+	_, portStr, err := net.SplitHostPort(addr.String())
+	if err != nil {
+		portStr = "68"
+	}
+	port, _ := strconv.Atoi(portStr)
+	return &net.UDPAddr{IP: destIP(req), Port: port}
+}
+
 // Serve takes a ServeConn (such as a net.PacketConn or dhcp4/conn) for reading
 // and writing DHCP packets. If either ReadFrom or WriteTo error (such as a
 // closed conn, or just time to exit), Serve exits and passes up the error.
@@ -60,17 +91,14 @@ func Serve(conn ServeConn, handler Handler) error {
 				continue
 			}
 		}
+		if req.YIAddr().Equal(net.IPv4zero) {
+			if ipStr, _, err := net.SplitHostPort(addr.String()); err == nil {
+				req.SetYIAddr(net.ParseIP(ipStr))
+			}
+		}
 		if res := handler.ServeDHCP(req, reqType, options); res != nil {
-			// If IP not available, broadcast
-			ipStr, portStr, err := net.SplitHostPort(addr.String())
-			if err != nil {
-				return err
-			}
-
-			if net.ParseIP(ipStr).Equal(net.IPv4zero) || req.Broadcast() {
-				port, _ := strconv.Atoi(portStr)
-				addr = &net.UDPAddr{IP: net.IPv4bcast, Port: port}
-			}
+			addr := destAddr(addr, req)
+			res.SetBroadcast(addr.IP.Equal(net.IPv4bcast))
 			if _, e := conn.WriteTo(res, addr); e != nil {
 				return e
 			}
