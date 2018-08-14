@@ -57,10 +57,10 @@ func trimNull(d []byte) []byte {
 	return d
 }
 
-func (p Packet) Cookie() []byte { return p[236:240] }
+func (p Packet) Cookie() []byte { return p[236:MinimalPacketSize] }
 func (p Packet) Options() []byte {
-	if len(p) > 240 {
-		return p[240:]
+	if len(p) > MinimalPacketSize {
+		return p[MinimalPacketSize:]
 	}
 	return nil
 }
@@ -131,8 +131,8 @@ func NewPacket(opCode OpCode) Packet {
 	p := make(Packet, 241)
 	p.SetOpCode(opCode)
 	p.SetHType(1) // Ethernet
-	p.SetCookie([]byte{99, 130, 83, 99})
-	p[240] = byte(End)
+	p.SetCookie(MagicCookie)
+	p[MinimalPacketSize] = byte(End)
 	return p
 }
 
@@ -145,7 +145,7 @@ func (p *Packet) AddOption(o OptionCode, value []byte) {
 
 // Removes all options from packet.
 func (p *Packet) StripOptions() {
-	*p = append((*p)[:240], byte(End))
+	*p = append((*p)[:MinimalPacketSize], byte(End))
 }
 
 // Creates a request packet that a Client would send to a server.
@@ -189,13 +189,22 @@ func ReplyPacket(req Packet, mt MessageType, serverId, yIAddr net.IP, leaseDurat
 
 // PadToMinSize pads a packet so that when sent over UDP, the entire packet,
 // is 300 bytes (BOOTP min), to be compatible with really old devices.
-var padder [272]byte
+var padder [PaddedMinimalPacketSize]byte
 
 func (p *Packet) PadToMinSize() {
-	if n := len(*p); n < 272 {
-		*p = append(*p, padder[:272-n]...)
+	if n := len(*p); n < PaddedMinimalPacketSize {
+		*p = append(*p, padder[:PaddedMinimalPacketSize-n]...)
 	}
 }
+
+// Some constants
+const (
+	MinimalPacketSize       = 240 // Minimal packet size
+	PaddedMinimalPacketSize = 272
+)
+
+// MagicCookie
+var MagicCookie = []byte{99, 130, 83, 99}
 
 // OpCodes
 const (
