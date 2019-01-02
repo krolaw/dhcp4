@@ -3,7 +3,7 @@ package dhcp4_test
 
 import (
 	dhcp     "github.com/krolaw/dhcp4"
-	//dhcpConn "github.com/krolaw/dhcp4"
+	//dhcpConn "github.com/krolaw/dhcp4/conn"
 
 	"log"
 	"math/rand"
