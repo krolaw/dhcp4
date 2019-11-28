@@ -2,7 +2,8 @@
 package dhcp4_test
 
 import (
-	dhcp "github.com/krolaw/dhcp4"
+	dhcp     "github.com/krolaw/dhcp4"
+	//dhcpConn "github.com/krolaw/dhcp4/conn"
 
 	"log"
 	"math/rand"
@@ -26,8 +27,10 @@ func ExampleHandler() {
 		},
 	}
 	log.Fatal(dhcp.ListenAndServe(handler))
-	// log.Fatal(dhcp.Serve(dhcp.NewUDP4BoundListener("eth0",":67"), handler)) // Select interface on multi interface device - just linux for now
-	// log.Fatal(dhcp.Serve(dhcp.NewUDP4FilterListener("en0",":67"), handler)) // Work around for other OSes
+
+	// conn, _ := dhcpConn.NewUDP4BoundListener("eth0",":67"), handler) // Select interface on multi interface device - just linux for now
+	// conn, _ := dhcpConn.NewUDP4FilterListener("en0",":67"), handler) // Work around for other OSes
+	// log.Fatal(dhcp.Serve(conn, handler))
 }
 
 type lease struct {
